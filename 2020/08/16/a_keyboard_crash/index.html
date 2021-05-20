@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- Minima -->
+  <!-- Hexo theme created by @adisaktijrs -->
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+
+  
+  <title>记一个 callstack 没有 user code 的 crash</title>
+  
+  <link rel="canonical" href="http://example.com/2020/08/16/a_keyboard_crash/">
+  
+  <meta name="description" content="自 iOS 13.x release 之后，产品在线上陆陆续续有些和 UIKitCore 相关 crash 出现。由于数目不多、且自动提单系统没有 ref 到我，并且我在开发其他玩意儿，所以单挂着一段时间。后来运营同事反馈类似问题，才开始着手处理（影响 UGC 了不是）。 根据同事反馈是发布内容的时">
+  
+  
+  <meta name="author" content="Kam">
+  
+  <meta property="og:image" content="http://example.comundefined">
+  
+  <meta property="og:site_name" content="KAM" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="记一个 callstack 没有 user code 的 crash" />
+  
+  <meta property="og:description" content="自 iOS 13.x release 之后，产品在线上陆陆续续有些和 UIKitCore 相关 crash 出现。由于数目不多、且自动提单系统没有 ref 到我，并且我在开发其他玩意儿，所以单挂着一段时间。后来运营同事反馈类似问题，才开始着手处理（影响 UGC 了不是）。 根据同事反馈是发布内容的时">
+  
+  <meta property="og:url" content="http://example.com/2020/08/16/a_keyboard_crash/" />
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="记一个 callstack 没有 user code 的 crash">
+  
+  <meta name="twitter:description" content="自 iOS 13.x release 之后，产品在线上陆陆续续有些和 UIKitCore 相关 crash 出现。由于数目不多、且自动提单系统没有 ref 到我，并且我在开发其他玩意儿，所以单挂着一段时间。后来运营同事反馈类似问题，才开始着手处理（影响 UGC 了不是）。 根据同事反馈是发布内容的时">
+  
+  
+  <meta name="twitter:image" content="http://example.comundefined">
+  
+  <meta name="twitter:url" content="http://example.com/2020/08/16/a_keyboard_crash/" />
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Preload fonts
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="preload" href="../fonts/dm-serif-display-v4-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/inter-v2-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+<link rel="stylesheet" href="/css/normalize.css">
+
+  
+<link rel="stylesheet" href="/css/skeleton.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+<link rel="stylesheet" href="/css/prism-dark.css">
+
+  
+<link rel="stylesheet" href="/css/prism-line-numbers.css">
+
+  <!-- User css -->
+  
+  
+<link rel="stylesheet" href="/css/user.css">
+
+  
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="/images/favicon.jpg">
+
+  <!-- Custom Theme Color Style
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <style>
+  a:not(.icon) {
+    text-decoration-color: #0FA0CE;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 50%,
+      #0FA0CE 50%
+    );
+  }
+  blockquote {
+    border-left: 8px solid #0FA0CE;
+  }
+  .nanobar .bar {
+    background: #0FA0CE;
+  }
+  .button.button-primary:hover,
+  button.button-primary:hover,
+  input[type="submit"].button-primary:hover,
+  input[type="reset"].button-primary:hover,
+  input[type="button"].button-primary:hover,
+  .button.button-primary:focus,
+  button.button-primary:focus,
+  input[type="submit"].button-primary:focus,
+  input[type="reset"].button-primary:focus,
+  input[type="button"].button-primary:focus {
+    background-color: #0FA0CE;
+    border-color: #0FA0CE;
+  }
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    border: 1px solid #0FA0CE;
+  }
+</style>
+
+  <!-- Google Analytics (With Privacy Settings On)
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div>
+
+        <div class="row">
+  <div class="two columns" style="max-width: 50px">
+    <h1 class="mt-2 mode">
+      <div onclick=setDarkMode(true) id="darkBtn">🌚</div>
+      <div onclick=setDarkMode(false) id="lightBtn" class=hidden>🌝</div>
+      <script >
+        if (localStorage.getItem('preferredTheme') == 'dark') {
+          setDarkMode(true)
+        }
+        function setDarkMode(isDark) {
+          var darkBtn = document.getElementById('darkBtn')
+          var lightBtn = document.getElementById('lightBtn')
+          if (isDark) {
+            lightBtn.style.display = "block"
+            darkBtn.style.display = "none"
+            localStorage.setItem('preferredTheme', 'dark');
+          } else {
+            lightBtn.style.display = "none"
+            darkBtn.style.display = "block"
+            localStorage.removeItem('preferredTheme');
+          }
+          document.body.classList.toggle("darkmode");
+        }
+      </script>
+    </h1>
+  </div>
+
+  <div class="six columns ml-1">
+    <h1 class="mt-2">
+      Kam&#39;s Online Notebook
+    </h1>
+  </div>
+
+  <hr style="margin-bottom: 13.7rem">
+
+  <div class="twelve columns">
+    <div class="row">
+      <div class="nine columns left">
+        <a href="/">🏠</a>
+        <!-- 
+         -->
+      </div>
+    </div>
+    <hr style="margin-bottom: 2.6rem">
+  </div>
+</div>
+
+        <div class="trans">
+            <h2>记一个 callstack 没有 user code 的 crash</h2>
+
+  <p>自 iOS 13.x release 之后，产品在线上陆陆续续有些和 UIKitCore 相关 crash 出现。由于数目不多、且自动提单系统没有 ref 到我，并且我在开发其他玩意儿，所以单挂着一段时间。后来运营同事反馈类似问题，才开始着手处理（影响 UGC 了不是）。</p>
+<p>根据同事反馈是发布内容的时候，输入「#」后会 crash，先看下 crash 的 callstack：</p>
+<pre class="line-numbers language-none"><code class="language-none">Exception Type:  EXC_CRASH (SIGABRT)
+Exception Codes: 0x00000000 at 0x0000000000000000
+Crashed Thread:  0
+
+Application Specific Information:
+*** Terminating app due to uncaught exception &#39;NSInvalidArgumentException&#39;, reason: &#39;-[__NSDictionaryM updateSelectionRects]: unrecognized selector sent to instance 0x2817c0560&#39;
+
+Thread 0 Crashed:
+0   CoreFoundation                      __exceptionPreprocess  +228
+1   libobjc.A.dylib                     objc_exception_throw  +60
+2   CoreFoundation                      -[NSOrderedSet initWithSet:copyItems:]  +0
+3   CoreFoundation                      ___forwarding___  +1320
+4   CoreFoundation                      _CF_forwarding_prep_0  +96
+5   UIKitCore                           -[UIKeyboardImpl unmarkText:]  +204
+6   UIKitCore                           __59-[UIKeyboardImpl handleAcceptedCandidate:executionContext:]_block_invoke_2  +300
+7   UIKitCore                           -[UIKeyboardTaskEntry execute:]  +188
+8   UIKitCore                           -[UIKeyboardTaskQueue continueExecutionOnMainThread]  +324
+9   UIKitCore                           -[UIKeyboardTaskQueue waitUntilTaskIsFinished:]  +172
+10  UIKitCore                           -[UIKeyboardTaskQueue performSingleTask:]  +156
+11  UIKitCore                           -[UIKeyboardImpl acceptCurrentCandidateForInput:]  +288
+12  UIKitCore                           -[UIKeyboardCandidateController candidateView:didAcceptCandidate:atIndexPath:inGridType:generateFeedback:]  +180
+13  UIKitCore                           -[UIKeyboardCandidateController candidateView:didAcceptCandidate:atIndexPath:inGridType:]  +100
+14  TextInputUI                         -[TUICandidateView candidateGrid:didAcceptCandidate:atIndexPath:]  +208
+15  TextInputUI                         -[TUICandidateGrid collectionView:didSelectItemAtIndexPath:]  +184
+16  UIKitCore                           -[UICollectionView _selectItemAtIndexPath:animated:scrollPosition:notifyDelegate:deselectPrevious:]  +952
+17  UIKitCore                           -[UICollectionView touchesEnded:withEvent:]  +572
+18  UIKitCore                           forwardTouchMethod  +332
+19  UIKitCore                           -[UIResponder touchesEnded:withEvent:]  +64
+20  UIKitCore                           forwardTouchMethod  +332
+21  UIKitCore                           -[UIResponder touchesEnded:withEvent:]  +64
+22  UIKitCore                           forwardTouchMethod  +332
+23  UIKitCore                           -[UIResponder touchesEnded:withEvent:]  +64
+24  UIKitCore                           -[UIWindow _sendTouchesForEvent:]  +1024
+25  UIKitCore                           -[UIWindow sendEvent:]  +3540
+26  UIKitCore                           -[UIApplication sendEvent:]  +348
+27  UIKitCore                           __dispatchPreprocessedEventFromEventQueue  +6688
+28  UIKitCore                           __handleEventQueueInternal  +5368
+29  UIKitCore                           __handleHIDEventFetcherDrain  +144
+30  CoreFoundation                      __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__  +28
+31  CoreFoundation                      __CFRunLoopDoSource0  +84
+32  CoreFoundation                      __CFRunLoopDoSources0  +188
+33  CoreFoundation                      __CFRunLoopRun  +780
+34  CoreFoundation                      CFRunLoopRunSpecific  +480
+35  GraphicsServices                    GSEventRunModal  +164
+36  UIKitCore                           UIApplicationMain  +1936
+37  MY_APP.                             _main 
+38  libdyld.dylib                       start  +4<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>通常看到这种没有用户代码的 callstack，都会觉得是系统问题。但是 Google 一下并不常见，而且也不可能放着四五个版本更新不解决。所有还是认定了是我们的问题。</p>
+<p>尝试复现，首先打个符号断点到<code>-[UIKeyboardImpl unmarkText:]</code>，再去输入框测试不同的「#」输入姿势。毕竟找到触发方式能让我的 debug 之旅轻松一点。</p>
+<ol>
+<li>全键盘输入英文内容后，输入「#」号，没有触发符号断点，也没有 crash；</li>
+<li>全键盘输入中文，点击上方选字区域触发符号断点，按下左下角的 「123」 进入符号输入，输入「#」没有 crash；</li>
+<li>九宫格输入中文，点击第一格的符号按键，会输入一个「，」，而后输入「#」，发生替换，触发断点并且 crash 了。</li>
+</ol>
+<p>这下找到必现的步骤了。比较有趣的是，这个 crash 的每次的 exception 都不一样，有时是给 dictionary 发消息，有时是 string，也出现过 bad access，基本可以断定是：在发送消息前，指向这个对象的指针地址被回收重用了（对象被释放），或者直接成了 dangling pointer。</p>
+<p>开启 Xcode 的 🧟‍♂️ 功能，可以帮助我们找到实际应该接受消息的对象类（callstack 没有体现发送消息的位置是比较奇怪的，可能 🧟‍♂️ 一直是这样而我没怎么用）：</p>
+<pre class="line-numbers language-none"><code class="language-none">*** -[UITextInteractionSelectableInputDelegate updateSelectionRects]: message sent to deallocated instance 0x600003bf8da0<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>但，还不够，我们想要的知道的是，这个对象是何时被释放的。</p>
+<h2 id="break-on-updateSelectionRects"><a href="#break-on-updateSelectionRects" class="headerlink" title="break on -updateSelectionRects:"></a>break on -updateSelectionRects:</h2><p>设置<code>-[UITextInteractionSelectableInputDelegate updateSelectionRects]</code>断点，<br>输入「#」时，命中断点：</p>
+<pre class="line-numbers language-none"><code class="language-none">(lldb) bt2
+* thread #1, queue &#x3D; &#39;com.apple.main-thread&#39;, stop reason &#x3D; breakpoint 1.2
+  * frame #0: 0x0000000128e98aea UIKitCore&#96;-[UITextInteractionSelectableInputDelegate updateSelectionRects]
+    frame #1: 0x0000000128d90771 UIKitCore&#96;-[UIKeyboardImpl deleteBackwardAndNotify:] + 391
+    frame #2: 0x00000001533475f1 UIKit&#96;-[UIKeyboardImplAccessibility deleteBackwardAndNotify:] + 46
+    frame #3: 0x0000000128d96fc4 UIKitCore&#96;-[UIKeyboardImpl handleDeletionForCandidate:] + 140
+    frame #4: 0x0000000128d96e82 UIKitCore&#96;-[UIKeyboardImpl acceptCandidate:forInput:] + 2310
+	...<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>查看<code>$rdi</code>并且给这个地址设置 watchpoint：</p>
+<pre class="line-numbers language-none"><code class="language-none">(lldb) po $rdi
+&lt;UITextInteractionSelectableInputDelegate: 0x600001c27d00&gt;
+
+(lldb) watchpoint set expression -- 0x600001c27d00
+Watchpoint created: Watchpoint 1: addr &#x3D; 0x600001c27d00 size &#x3D; 8 state &#x3D; enabled type &#x3D; w
+    new value: 4997267760<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>放行，触发 watchpoint，可以看到应该是输入「#」号之后，present 了一个 viewController，UIKit 刷新输入控件的 delegate 然后把旧的释放了：</p>
+<pre class="line-numbers language-none"><code class="language-none">Process 35093 resuming
+
+Watchpoint 1 hit:
+old value: 4997267760
+new value: 105553190428256
+(lldb) bt
+* thread #1, queue &#x3D; &#39;com.apple.main-thread&#39;, stop reason &#x3D; watchpoint 1
+  * frame #0: 0x000000011f1c1ef7 libobjc.A.dylib&#96;object_setClass + 96
+    frame #1: 0x000000011fb2ba54 CoreFoundation&#96;-[NSObject(NSObject) __dealloc_zombie] + 170
+    frame #2: 0x0000000128fdc256 UIKitCore&#96;-[UIResponder dealloc] + 145
+    frame #3: 0x0000000153362f0f UIKit&#96;-[UIResponderAccessibility dealloc] + 55
+    frame #4: 0x000000011f1da934 libobjc.A.dylib&#96;objc_object::sidetable_release(bool, bool) + 174
+    frame #5: 0x0000000128d79c53 UIKitCore&#96;-[UIKeyboardImpl setDelegate:force:] + 1423
+    frame #6: 0x00000001289eee15 UIKitCore&#96;-[UIInputResponderController _reloadInputViewsForKeyWindowSceneResponder:] + 2289
+	...
+    frame #15: 0x00000001288a0b22 UIKitCore&#96;-[UIViewController presentViewController:animated:completion:] + 155
+    frame #16: 0x000000010e5165c7 APP&#96;-[UIViewController gl_pt_presentViewController:animated:completion:] at UIViewController+PageTrack.m:37:5
+    frame #17: 0x00000001533bdfbc UIKit&#96;-[UIViewControllerAccessibility presentViewController:animated:completion:] + 221
+    frame #18: 0x000000010f0bbfff APP &#96;-[AViewController showTopicVc] at AViewController.m:1689:5
+    frame #19: 0x000000010f0b8d69 APP &#96;-[AViewController publishTextView:shouldChangeTextInRange:replacementText:] at AViewController.m:1538:13
+    frame #20: 0x000000010f1ca238 APP &#96;-[ATextInputTableViewCell textView:shouldChangeTextInRange:replacementText:] at ATextInputTableViewCell.m:127:16
+    frame #21: 0x000000011aa8da84 APP &#96;-[YYTextView setMarkedText:selectedRange:] at YYTextView.m:3368:23
+    frame #22: 0x0000000128e4a724 UIKitCore&#96;-[UIResponder(UITextInput_Internal) _setAttributedMarkedText:selectedRange:] + 162
+    frame #23: 0x0000000128e9920b UIKitCore&#96;-[UITextInteractionSelectableInputDelegate _setMarkedText:selectedRange:] + 38
+    frame #24: 0x0000000128d85997 UIKitCore&#96;-[UIKeyboardImpl unmarkText:] + 165<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>再放行，就会出现 crash 并且 deallocated instance 地址确实是我们之前观察的对象：</p>
+<pre class="line-numbers language-none"><code class="language-none">*** -[UITextInteractionSelectableInputDelegate updateSelectionRects]: message sent to deallocated instance 0x600001c27d00<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>也就在这一轮调用，我们不应该在<code>-setMarkedText:selectedRange:</code>中 present 新的 viewController，利用 GCD 到 mainqueue 在下一次 runloop present，或者 resign first responder 再 present 应该都是解决办法。</p>
+<p>但上述「打断点寻找被释放对象」其实这是我事后复盘想到的办法，这个有点碰运气的成分，应为这恰好在被释放之前触发了一次断点，要是没有呢？</p>
+<h2 id="最初的笨办法"><a href="#最初的笨办法" class="headerlink" title="最初的笨办法"></a>最初的笨办法</h2><p>最初的我先从能得到的符号入手，一步一步找到最终发送<code>updateSelectionRects</code>的位置。<br>设置<code>-[UIKeyboardImpl unmarkText:]</code>断点，<br>触发后给<code>call</code>啊<code>jmp</code>啊等指令位置设置断点：</p>
+<pre class="line-numbers language-none"><code class="language-none">UIKitCore&#96;-[UIKeyboardImpl unmarkText:]:
+    0x1297dd8f2 &lt;+0&gt;:   pushq  %rbp
+    0x1297dd8f3 &lt;+1&gt;:   movq   %rsp, %rbp
+    0x1297dd8f6 &lt;+4&gt;:   pushq  %r15
+    0x1297dd8f8 &lt;+6&gt;:   pushq  %r14
+    ...
+    0x1297dd977 &lt;+133&gt;: movq   0xf89a8a(%rip), %rsi      ; &quot;length&quot;
+    0x1297dd97e &lt;+140&gt;: callq  *%r13
+    0x1297dd981 &lt;+143&gt;: movq   0xfbfbe8(%rip), %rsi      ; &quot;_setMarkedText:selectedRange:&quot;
+    0x1297dd988 &lt;+150&gt;: movq   %r12, %rdi
+    0x1297dd98b &lt;+153&gt;: movq   %r14, %rdx
+    0x1297dd98e &lt;+156&gt;: movq   %rax, %rcx
+    0x1297dd991 &lt;+159&gt;: xorl   %r8d, %r8d
+-&gt;  0x1297dd994 &lt;+162&gt;: callq  *%r13
+    0x1297dd997 &lt;+165&gt;: movq   0xf966a2(%rip), %rsi      ; &quot;unmarkText&quot;
+    0x1297dd99e &lt;+172&gt;: movq   %rbx, %rdi
+    0x1297dd9a1 &lt;+175&gt;: callq  *%r13<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这一轮确定 crash 发送在<code>_setMarkedText:selectedRange:</code>。<br>再来一轮给<code>_setMarkedText:selectedRange:</code>设置断点：</p>
+<pre class="line-numbers language-none"><code class="language-none">UIKitCore&#96;-[UITextInteractionSelectableInputDelegate _setMarkedText:selectedRange:]:
+-&gt;  0x124db91e5 &lt;+0&gt;:  pushq  %rbp
+    0x124db91e6 &lt;+1&gt;:  movq   %rsp, %rbp
+    0x124db91e9 &lt;+4&gt;:  pushq  %r14
+    0x124db91eb &lt;+6&gt;:  pushq  %rbx
+    0x124db91ec &lt;+7&gt;:  movq   %rdi, %rbx
+    0x124db91ef &lt;+10&gt;: movq   0xef20da(%rip), %rax      ; UITextInteractionSelectableInputDelegate._textInput
+    0x124db91f6 &lt;+17&gt;: movq   (%rdi,%rax), %rdi
+    0x124db91fa &lt;+21&gt;: movq   0xeac36f(%rip), %rsi      ; &quot;_setMarkedText:selectedRange:&quot;
+    0x124db9201 &lt;+28&gt;: movq   0xbfa610(%rip), %r14      ; (void *)0x0000000115966e40: objc_msgSend
+    0x124db9208 &lt;+35&gt;: callq  *%r14
+    0x124db920b &lt;+38&gt;: movq   0xe995ee(%rip), %rsi      ; &quot;updateSelectionRects&quot;
+    0x124db9212 &lt;+45&gt;: movq   %rbx, %rdi
+    0x124db9215 &lt;+48&gt;: movq   %r14, %rax
+    0x124db9218 &lt;+51&gt;: popq   %rbx
+    0x124db9219 &lt;+52&gt;: popq   %r14
+    0x124db921b &lt;+54&gt;: popq   %rbp
+    0x124db921c &lt;+55&gt;: jmpq   *%rax<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这一下就有趣了，我们看到了 +38 位置处加载字符串到<code>$rsi</code>的代码，然后<code>jmpq</code>到<code>objc_msgSend</code>(<code>0x0000000115966e40 -&gt; $r14 -&gt; $rax</code>)，推测就是 +55 处，给 deallocated instance （<code>$rdi</code>寄存器是消息接受者）发送消息。通过反汇编可以看到<code>$rsi -&gt; $rbx -&gt; $rsi</code> 这样的拷贝路径，也就是<code>_setMarkedText:selectedRange:</code>和<code>updateSelectionRects</code>使用一个消息接受者。那么我们用上一节提到的 watchpoint 观察这个<code>$rdi</code>，之后的流程都一样了。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Aug 16, 2020</p>
+  
+
+
+          <div class="row mt-2">
+  
+    <div class="eight columns">
+      <p id="madewith"></p>
+    </div>
+
+    <!-- Sepcial thanks to https://simpleicons.org/ for the icons -->
+    <div class="four columns mb-3 posisi" >
+      
+      <a class="ml-0 footer-link icon" href="https://github.com/Kam-To" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="GitHub">
+        <svg class="github svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      
+
+      
+
+      
+      <a class="ml-0 footer-link icon" href="https://twitter.com/KamtoAu" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="Twitter">
+        <svg class="twitter svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Twitter</title><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.555-2.005.959-3.127 1.184-.896-.959-2.173-1.559-3.591-1.559-2.717 0-4.92 2.203-4.92 4.917 0 .39.045.765.127 1.124C7.691 8.094 4.066 6.13 1.64 3.161c-.427.722-.666 1.561-.666 2.475 0 1.71.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.228-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.377 4.604 3.417-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.189 1.394 4.768 2.209 7.557 2.209 9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63.961-.689 1.8-1.56 2.46-2.548l-.047-.02z"/></svg>
+      </a>
+      
+
+      
+
+      
+
+    </div>
+  
+</div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <script src="/js/nanobar.min.js"></script>
+  <script>
+    var options = {
+      classname: 'nanobar',
+      id: 'myNanobar'
+    };
+    var nanobar = new Nanobar(options);
+    nanobar.go(30);
+    nanobar.go(76);
+    nanobar.go(100);
+  </script>
+
+</body>
+
+</html>

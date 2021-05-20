@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- Minima -->
+  <!-- Hexo theme created by @adisaktijrs -->
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+
+  
+  <title>组件二进制化初期遇到的问题</title>
+  
+  <link rel="canonical" href="http://example.com/2021/05/19/cons_about_binary_packaging/">
+  
+  <meta name="description" content="先前用美柚的 cocoapods-imy-bin 插件简单实现了部分 Pods 的二进制化，虽然功能不完善，但是起码还是先用上了。接入、回归测试期间发现些小的问题，整理一下后面再继续造轮子解决这些问题。 人工干预要素过多生成 bin 的方式，需要编写一个项目 spec，然后查看 Podfile.lo">
+  
+  
+  <meta name="author" content="Kam">
+  
+  <meta property="og:image" content="http://example.comundefined">
+  
+  <meta property="og:site_name" content="KAM" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="组件二进制化初期遇到的问题" />
+  
+  <meta property="og:description" content="先前用美柚的 cocoapods-imy-bin 插件简单实现了部分 Pods 的二进制化，虽然功能不完善，但是起码还是先用上了。接入、回归测试期间发现些小的问题，整理一下后面再继续造轮子解决这些问题。 人工干预要素过多生成 bin 的方式，需要编写一个项目 spec，然后查看 Podfile.lo">
+  
+  <meta property="og:url" content="http://example.com/2021/05/19/cons_about_binary_packaging/" />
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="组件二进制化初期遇到的问题">
+  
+  <meta name="twitter:description" content="先前用美柚的 cocoapods-imy-bin 插件简单实现了部分 Pods 的二进制化，虽然功能不完善，但是起码还是先用上了。接入、回归测试期间发现些小的问题，整理一下后面再继续造轮子解决这些问题。 人工干预要素过多生成 bin 的方式，需要编写一个项目 spec，然后查看 Podfile.lo">
+  
+  
+  <meta name="twitter:image" content="http://example.comundefined">
+  
+  <meta name="twitter:url" content="http://example.com/2021/05/19/cons_about_binary_packaging/" />
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Preload fonts
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="preload" href="../fonts/dm-serif-display-v4-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/inter-v2-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+<link rel="stylesheet" href="/css/normalize.css">
+
+  
+<link rel="stylesheet" href="/css/skeleton.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+<link rel="stylesheet" href="/css/prism-dark.css">
+
+  
+<link rel="stylesheet" href="/css/prism-line-numbers.css">
+
+  <!-- User css -->
+  
+  
+<link rel="stylesheet" href="/css/user.css">
+
+  
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="/images/favicon.jpg">
+
+  <!-- Custom Theme Color Style
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <style>
+  a:not(.icon) {
+    text-decoration-color: #0FA0CE;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 50%,
+      #0FA0CE 50%
+    );
+  }
+  blockquote {
+    border-left: 8px solid #0FA0CE;
+  }
+  .nanobar .bar {
+    background: #0FA0CE;
+  }
+  .button.button-primary:hover,
+  button.button-primary:hover,
+  input[type="submit"].button-primary:hover,
+  input[type="reset"].button-primary:hover,
+  input[type="button"].button-primary:hover,
+  .button.button-primary:focus,
+  button.button-primary:focus,
+  input[type="submit"].button-primary:focus,
+  input[type="reset"].button-primary:focus,
+  input[type="button"].button-primary:focus {
+    background-color: #0FA0CE;
+    border-color: #0FA0CE;
+  }
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    border: 1px solid #0FA0CE;
+  }
+</style>
+
+  <!-- Google Analytics (With Privacy Settings On)
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div>
+
+        <div class="row">
+  <div class="two columns" style="max-width: 50px">
+    <h1 class="mt-2 mode">
+      <div onclick=setDarkMode(true) id="darkBtn">🌚</div>
+      <div onclick=setDarkMode(false) id="lightBtn" class=hidden>🌝</div>
+      <script >
+        if (localStorage.getItem('preferredTheme') == 'dark') {
+          setDarkMode(true)
+        }
+        function setDarkMode(isDark) {
+          var darkBtn = document.getElementById('darkBtn')
+          var lightBtn = document.getElementById('lightBtn')
+          if (isDark) {
+            lightBtn.style.display = "block"
+            darkBtn.style.display = "none"
+            localStorage.setItem('preferredTheme', 'dark');
+          } else {
+            lightBtn.style.display = "none"
+            darkBtn.style.display = "block"
+            localStorage.removeItem('preferredTheme');
+          }
+          document.body.classList.toggle("darkmode");
+        }
+      </script>
+    </h1>
+  </div>
+
+  <div class="six columns ml-1">
+    <h1 class="mt-2">
+      Kam&#39;s Online Notebook
+    </h1>
+  </div>
+
+  <hr style="margin-bottom: 13.7rem">
+
+  <div class="twelve columns">
+    <div class="row">
+      <div class="nine columns left">
+        <a href="/">🏠</a>
+        <!-- 
+         -->
+      </div>
+    </div>
+    <hr style="margin-bottom: 2.6rem">
+  </div>
+</div>
+
+        <div class="trans">
+            <h2>组件二进制化初期遇到的问题</h2>
+
+  <p>先前用美柚的 <a target="_blank" rel="noopener" href="https://github.com/MeetYouDevs/cocoapods-imy-bin">cocoapods-imy-bin</a> 插件简单实现了部分 Pods 的二进制化，虽然功能不完善，但是起码还是先用上了。接入、回归测试期间发现些小的问题，整理一下后面再继续造轮子解决这些问题。</p>
+<h2 id="人工干预要素过多"><a href="#人工干预要素过多" class="headerlink" title="人工干预要素过多"></a>人工干预要素过多</h2><p>生成 bin 的方式，需要编写一个项目 spec，然后查看 Podfile.lock 中具体的版本，通过编写 spec.dependency 指定版本，然后插件打包上传，然后 pod install 生成对 bin 的依赖。</p>
+<p>这里面的操作成本比较高：</p>
+<pre><code>1. 需要手工编写 spec；
+2. 需要手工确认 Podfile.lock 中锁定的版本；
+3. 某些源码打出来的包没有头文件、bundle；
+4. 某些源码打出来的包可能是因为 macro 的问题有异常；
+</code></pre>
+<p>关于第一二点，理想状况只要在 Podfile mark 一下就应该自动搞定。</p>
+<p>关于第三点，WCDB 用 cocoapods-packager 是有 header 的，WCDB.podspec 看了下也是没问题的，所以目前这种 packing 方式不满足我们的需求。</p>
+<p>第四点提及的 macro 的问题则更多些，有点让人想放弃填坑的冲动，比如：</p>
+<p>SDSWebImage 的 webp support，单独编译时就想不到要在 preprocess definition 上增加 SD_WEBP=1；</p>
+<p>还有些与 Debug/Release/ARC Support 这些 macro 相关的条件编译，这意味着如果要 packing 一个 binary，这个 binary 大概率只能用在这个项目的某种编译环境中。</p>
+<p>综上使用 source + tag/version/commit 的方式就不能用来作为这个 binary 的唯一标识。因为你不知道哪天引入的第三方库里面有多少条件编译代码，所以不得不时刻提防。</p>
+<p>最终的形态应该是某个 binary 仅用在特定项目中，具体引用的 binary 要和编译参数内容相关。</p>
+<h2 id="无入侵导致无感知"><a href="#无入侵导致无感知" class="headerlink" title="无入侵导致无感知"></a>无入侵导致无感知</h2><p>由于目前插件采用的是源码白名单，那么白名单之外的 Pod 就自动使用了二进制，这种无感知会带来潜在的异常，比如：</p>
+<p>有两个项目，A 使用 master-107-YYText，B 使用 private-107-YYText，两个项目同时开启二进制依赖。A 上传了 master-107-YYText-bin，而 B 不知情，插件导致错误地使用了 master-107-YYText-bin 。</p>
+<h2 id="总的来说"><a href="#总的来说" class="headerlink" title="总的来说"></a>总的来说</h2><p>在业务代码没有组件化的情况下，搞 Pods 的二进制化必要性一般，特别是有了 M1 的 Mac mini 之后，得益于 M1 超高的 IPC 和高性能 SSD，打包速度有了几倍的提升。</p>
+<p>技术原理上没有特别复杂的东西，倒是工程化落地需要考量的细节比较多。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — May 19, 2021</p>
+  
+
+
+          <div class="row mt-2">
+  
+    <div class="eight columns">
+      <p id="madewith"></p>
+    </div>
+
+    <!-- Sepcial thanks to https://simpleicons.org/ for the icons -->
+    <div class="four columns mb-3 posisi" >
+      
+      <a class="ml-0 footer-link icon" href="https://github.com/Kam-To" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="GitHub">
+        <svg class="github svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      
+
+      
+
+      
+      <a class="ml-0 footer-link icon" href="https://twitter.com/KamtoAu" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="Twitter">
+        <svg class="twitter svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Twitter</title><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.555-2.005.959-3.127 1.184-.896-.959-2.173-1.559-3.591-1.559-2.717 0-4.92 2.203-4.92 4.917 0 .39.045.765.127 1.124C7.691 8.094 4.066 6.13 1.64 3.161c-.427.722-.666 1.561-.666 2.475 0 1.71.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.228-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.377 4.604 3.417-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.189 1.394 4.768 2.209 7.557 2.209 9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63.961-.689 1.8-1.56 2.46-2.548l-.047-.02z"/></svg>
+      </a>
+      
+
+      
+
+      
+
+    </div>
+  
+</div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <script src="/js/nanobar.min.js"></script>
+  <script>
+    var options = {
+      classname: 'nanobar',
+      id: 'myNanobar'
+    };
+    var nanobar = new Nanobar(options);
+    nanobar.go(30);
+    nanobar.go(76);
+    nanobar.go(100);
+  </script>
+
+</body>
+
+</html>

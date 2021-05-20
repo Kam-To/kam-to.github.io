@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- Minima -->
+  <!-- Hexo theme created by @adisaktijrs -->
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+
+  
+  <title>一个 NSDictionary 无用的冷知识</title>
+  
+  <link rel="canonical" href="http://example.com/2020/06/10/quote_in_dict/">
+  
+  <meta name="description" content="在通过 NSLog 输出 NSDictionary 的键值对时，会发现有些 key 会被双引号括住。我是从来没留意过这个细节，直到今天有同事问我为什么。 来一个简单的测试： NSDictionary *dict &amp;#x3D;  @&amp;#123;     @&amp;quot;appKey&amp;quot;:@&amp;qu">
+  
+  
+  <meta name="author" content="Kam">
+  
+  <meta property="og:image" content="http://example.comundefined">
+  
+  <meta property="og:site_name" content="KAM" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="一个 NSDictionary 无用的冷知识" />
+  
+  <meta property="og:description" content="在通过 NSLog 输出 NSDictionary 的键值对时，会发现有些 key 会被双引号括住。我是从来没留意过这个细节，直到今天有同事问我为什么。 来一个简单的测试： NSDictionary *dict &amp;#x3D;  @&amp;#123;     @&amp;quot;appKey&amp;quot;:@&amp;qu">
+  
+  <meta property="og:url" content="http://example.com/2020/06/10/quote_in_dict/" />
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="一个 NSDictionary 无用的冷知识">
+  
+  <meta name="twitter:description" content="在通过 NSLog 输出 NSDictionary 的键值对时，会发现有些 key 会被双引号括住。我是从来没留意过这个细节，直到今天有同事问我为什么。 来一个简单的测试： NSDictionary *dict &amp;#x3D;  @&amp;#123;     @&amp;quot;appKey&amp;quot;:@&amp;qu">
+  
+  
+  <meta name="twitter:image" content="http://example.comundefined">
+  
+  <meta name="twitter:url" content="http://example.com/2020/06/10/quote_in_dict/" />
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Preload fonts
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="preload" href="../fonts/dm-serif-display-v4-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/inter-v2-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+<link rel="stylesheet" href="/css/normalize.css">
+
+  
+<link rel="stylesheet" href="/css/skeleton.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+<link rel="stylesheet" href="/css/prism-dark.css">
+
+  
+<link rel="stylesheet" href="/css/prism-line-numbers.css">
+
+  <!-- User css -->
+  
+  
+<link rel="stylesheet" href="/css/user.css">
+
+  
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="/images/favicon.jpg">
+
+  <!-- Custom Theme Color Style
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <style>
+  a:not(.icon) {
+    text-decoration-color: #0FA0CE;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 50%,
+      #0FA0CE 50%
+    );
+  }
+  blockquote {
+    border-left: 8px solid #0FA0CE;
+  }
+  .nanobar .bar {
+    background: #0FA0CE;
+  }
+  .button.button-primary:hover,
+  button.button-primary:hover,
+  input[type="submit"].button-primary:hover,
+  input[type="reset"].button-primary:hover,
+  input[type="button"].button-primary:hover,
+  .button.button-primary:focus,
+  button.button-primary:focus,
+  input[type="submit"].button-primary:focus,
+  input[type="reset"].button-primary:focus,
+  input[type="button"].button-primary:focus {
+    background-color: #0FA0CE;
+    border-color: #0FA0CE;
+  }
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    border: 1px solid #0FA0CE;
+  }
+</style>
+
+  <!-- Google Analytics (With Privacy Settings On)
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div>
+
+        <div class="row">
+  <div class="two columns" style="max-width: 50px">
+    <h1 class="mt-2 mode">
+      <div onclick=setDarkMode(true) id="darkBtn">🌚</div>
+      <div onclick=setDarkMode(false) id="lightBtn" class=hidden>🌝</div>
+      <script >
+        if (localStorage.getItem('preferredTheme') == 'dark') {
+          setDarkMode(true)
+        }
+        function setDarkMode(isDark) {
+          var darkBtn = document.getElementById('darkBtn')
+          var lightBtn = document.getElementById('lightBtn')
+          if (isDark) {
+            lightBtn.style.display = "block"
+            darkBtn.style.display = "none"
+            localStorage.setItem('preferredTheme', 'dark');
+          } else {
+            lightBtn.style.display = "none"
+            darkBtn.style.display = "block"
+            localStorage.removeItem('preferredTheme');
+          }
+          document.body.classList.toggle("darkmode");
+        }
+      </script>
+    </h1>
+  </div>
+
+  <div class="six columns ml-1">
+    <h1 class="mt-2">
+      Kam&#39;s Online Notebook
+    </h1>
+  </div>
+
+  <hr style="margin-bottom: 13.7rem">
+
+  <div class="twelve columns">
+    <div class="row">
+      <div class="nine columns left">
+        <a href="/">🏠</a>
+        <!-- 
+         -->
+      </div>
+    </div>
+    <hr style="margin-bottom: 2.6rem">
+  </div>
+</div>
+
+        <div class="trans">
+            <h2>一个 NSDictionary 无用的冷知识</h2>
+
+  <p>在通过 NSLog 输出 NSDictionary 的键值对时，会发现有些 key 会被双引号括住。我是从来没留意过这个细节，直到今天有同事问我为什么。</p>
+<p>来一个简单的测试：</p>
+<pre class="line-numbers language-none"><code class="language-none">NSDictionary *dict &#x3D;  @&#123;
+    @&quot;appKey&quot;:@&quot;g37&quot;, 
+    @&quot;server_id&quot;:@&quot;10023&quot;,
+    @&quot;role_id&quot;:@&quot;402932839&quot;
+&#125;;
+NSLog(@&quot;%@&quot;, dict);<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>console 输出：</p>
+<pre class="line-numbers language-none"><code class="language-none">&#123;
+    appKey &#x3D; g37;
+    &quot;role_id&quot; &#x3D; 402932839;
+    &quot;server_id&quot; &#x3D; 10023;
+ &#125;   <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>啊哈。</p>
+<h2 id="Dive-To-description-Method"><a href="#Dive-To-description-Method" class="headerlink" title="Dive To -description Method"></a>Dive To <code>-description</code> Method</h2><p>通过符号断点 <code>-[NSDictionary description]</code> 很容易发现实际的拼接逻辑实现是在 <code>-[NSDictionary descriptionWithLocale:indent:]</code>，瞧了一眼指令过多，打算让 Hopper 去完成翻译工作。通过 <code>image list CoreFoundation</code> 找到 binary 的路径把它扔进去。</p>
+<p><img src="/images/quote_in_dict/dict_des_asm.jpg"></p>
+<p>可见，当 key 或者 value 是<code>NSString</code>类型的时候，使用的是<code>-[NSString _stringRepresentation]</code>的返回值作为输出字符串。接下来的关注点就取到了<code>NSString</code>的这个私有方法上了。可以看到里面的 <code>je</code>, <code>jbe</code>, <code>jne</code> 等跳转指令实在太多了，偷懒继续用 Hopper 分析：</p>
+<p><img src="/images/quote_in_dict/string_represent_asm.jpg"></p>
+<p>其中有些逻辑的生成比较诡异，和原本的反汇编指令初入较大，比如上图所发送<code>-getCharacters:range:</code>消息的时候，翻译了个错误的消息接受者。下面红框框住的那段循环比较重要，有上面可以知道 rcx 获得了第一个<code>Unichar</code>，在循环里面不断地遍历这个 buffer，通过一段计算逻辑和判断改变 r14 的值，然后再最后判断 r14 是否为 0（不为零则跳转  loc_29234 执行<code>-[NSString quotedStringRepresentation]</code>）。</p>
+<p>看下 loc_2915c 中运算可能不那么直观， 使用 ASCII 的字符集作为 buffer 跑一下：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">for</span> <span class="token punctuation">(</span>UniChar rcx <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> rcx <span class="token operator">&lt;</span> <span class="token number">256</span><span class="token punctuation">;</span> rcx<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    
+    UniChar rdx <span class="token operator">=</span> <span class="token punctuation">(</span>rcx <span class="token operator">&amp;</span> <span class="token number">0xffffffdf</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">0xffffffbf</span><span class="token punctuation">;</span>
+    UniChar crcx <span class="token operator">=</span> rcx <span class="token operator">+</span> <span class="token number">0xffffffd0</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>rdx <span class="token operator">&lt;=</span> <span class="token number">0x19</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        rdx <span class="token operator">=</span> <span class="token number">0x1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+        rdx <span class="token operator">=</span> <span class="token number">0x0</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>rcx <span class="token operator">&lt;=</span> <span class="token number">0x9</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        rdx <span class="token operator">=</span> <span class="token number">0x1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+ <span class="token comment">//   printf("char [%c] rdx: %2x  , rcx: %2x\n", rcx, rdx, crcx);</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"char [%c] let r14 be %d\n"</span><span class="token punctuation">,</span> rcx<span class="token punctuation">,</span> rdx<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>运行一遍之后结果不言而喻，如果字符串含有非字母表的字符（a-z &amp; A-Z），会使得的 r14 修改为 0 并走到使用引号字符串的逻辑。这里的说法也不是很严谨，可以看到上面代码的输出，对于前面的部分不可见字符也会使得 r14 为 1 的。</p>
+<p>发现了个无用的冷知识，但是<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/10520486/why-does-string-show-up-in-nsdictionary-with-quotes-but-others-dont"> so 上早有提问点明一切，还是 duplicated，害。</a></p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Jun 10, 2020</p>
+  
+
+
+          <div class="row mt-2">
+  
+    <div class="eight columns">
+      <p id="madewith"></p>
+    </div>
+
+    <!-- Sepcial thanks to https://simpleicons.org/ for the icons -->
+    <div class="four columns mb-3 posisi" >
+      
+      <a class="ml-0 footer-link icon" href="https://github.com/Kam-To" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="GitHub">
+        <svg class="github svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      
+
+      
+
+      
+      <a class="ml-0 footer-link icon" href="https://twitter.com/KamtoAu" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="Twitter">
+        <svg class="twitter svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Twitter</title><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.555-2.005.959-3.127 1.184-.896-.959-2.173-1.559-3.591-1.559-2.717 0-4.92 2.203-4.92 4.917 0 .39.045.765.127 1.124C7.691 8.094 4.066 6.13 1.64 3.161c-.427.722-.666 1.561-.666 2.475 0 1.71.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.228-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.377 4.604 3.417-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.189 1.394 4.768 2.209 7.557 2.209 9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63.961-.689 1.8-1.56 2.46-2.548l-.047-.02z"/></svg>
+      </a>
+      
+
+      
+
+      
+
+    </div>
+  
+</div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <script src="/js/nanobar.min.js"></script>
+  <script>
+    var options = {
+      classname: 'nanobar',
+      id: 'myNanobar'
+    };
+    var nanobar = new Nanobar(options);
+    nanobar.go(30);
+    nanobar.go(76);
+    nanobar.go(100);
+  </script>
+
+</body>
+
+</html>

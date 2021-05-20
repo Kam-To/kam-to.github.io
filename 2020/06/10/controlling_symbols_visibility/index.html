@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- Minima -->
+  <!-- Hexo theme created by @adisaktijrs -->
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+
+  
+  <title>Symbol Not Found. Again.</title>
+  
+  <link rel="canonical" href="http://example.com/2020/06/10/controlling_symbols_visibility/">
+  
+  <meta name="description" content="最近把楼下部门提供的 SDK 从主工程抽离到私有源上，将其链接到一个动态库中再被主工程所用。目的是为了转移 main executable 的 TEXT 段的体积到动态库中去（兼容 iOS 8 的痛）。在抽离代码、分析依赖、建 podspec、上传私有源等一顿操作猛如虎后，启动时 dyld 报 sy">
+  
+  
+  <meta name="author" content="Kam">
+  
+  <meta property="og:image" content="http://example.comundefined">
+  
+  <meta property="og:site_name" content="KAM" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Symbol Not Found. Again." />
+  
+  <meta property="og:description" content="最近把楼下部门提供的 SDK 从主工程抽离到私有源上，将其链接到一个动态库中再被主工程所用。目的是为了转移 main executable 的 TEXT 段的体积到动态库中去（兼容 iOS 8 的痛）。在抽离代码、分析依赖、建 podspec、上传私有源等一顿操作猛如虎后，启动时 dyld 报 sy">
+  
+  <meta property="og:url" content="http://example.com/2020/06/10/controlling_symbols_visibility/" />
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Symbol Not Found. Again.">
+  
+  <meta name="twitter:description" content="最近把楼下部门提供的 SDK 从主工程抽离到私有源上，将其链接到一个动态库中再被主工程所用。目的是为了转移 main executable 的 TEXT 段的体积到动态库中去（兼容 iOS 8 的痛）。在抽离代码、分析依赖、建 podspec、上传私有源等一顿操作猛如虎后，启动时 dyld 报 sy">
+  
+  
+  <meta name="twitter:image" content="http://example.comundefined">
+  
+  <meta name="twitter:url" content="http://example.com/2020/06/10/controlling_symbols_visibility/" />
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Preload fonts
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="preload" href="../fonts/dm-serif-display-v4-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/inter-v2-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+<link rel="stylesheet" href="/css/normalize.css">
+
+  
+<link rel="stylesheet" href="/css/skeleton.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+<link rel="stylesheet" href="/css/prism-dark.css">
+
+  
+<link rel="stylesheet" href="/css/prism-line-numbers.css">
+
+  <!-- User css -->
+  
+  
+<link rel="stylesheet" href="/css/user.css">
+
+  
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="/images/favicon.jpg">
+
+  <!-- Custom Theme Color Style
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <style>
+  a:not(.icon) {
+    text-decoration-color: #0FA0CE;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 50%,
+      #0FA0CE 50%
+    );
+  }
+  blockquote {
+    border-left: 8px solid #0FA0CE;
+  }
+  .nanobar .bar {
+    background: #0FA0CE;
+  }
+  .button.button-primary:hover,
+  button.button-primary:hover,
+  input[type="submit"].button-primary:hover,
+  input[type="reset"].button-primary:hover,
+  input[type="button"].button-primary:hover,
+  .button.button-primary:focus,
+  button.button-primary:focus,
+  input[type="submit"].button-primary:focus,
+  input[type="reset"].button-primary:focus,
+  input[type="button"].button-primary:focus {
+    background-color: #0FA0CE;
+    border-color: #0FA0CE;
+  }
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    border: 1px solid #0FA0CE;
+  }
+</style>
+
+  <!-- Google Analytics (With Privacy Settings On)
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div>
+
+        <div class="row">
+  <div class="two columns" style="max-width: 50px">
+    <h1 class="mt-2 mode">
+      <div onclick=setDarkMode(true) id="darkBtn">🌚</div>
+      <div onclick=setDarkMode(false) id="lightBtn" class=hidden>🌝</div>
+      <script >
+        if (localStorage.getItem('preferredTheme') == 'dark') {
+          setDarkMode(true)
+        }
+        function setDarkMode(isDark) {
+          var darkBtn = document.getElementById('darkBtn')
+          var lightBtn = document.getElementById('lightBtn')
+          if (isDark) {
+            lightBtn.style.display = "block"
+            darkBtn.style.display = "none"
+            localStorage.setItem('preferredTheme', 'dark');
+          } else {
+            lightBtn.style.display = "none"
+            darkBtn.style.display = "block"
+            localStorage.removeItem('preferredTheme');
+          }
+          document.body.classList.toggle("darkmode");
+        }
+      </script>
+    </h1>
+  </div>
+
+  <div class="six columns ml-1">
+    <h1 class="mt-2">
+      Kam&#39;s Online Notebook
+    </h1>
+  </div>
+
+  <hr style="margin-bottom: 13.7rem">
+
+  <div class="twelve columns">
+    <div class="row">
+      <div class="nine columns left">
+        <a href="/">🏠</a>
+        <!-- 
+         -->
+      </div>
+    </div>
+    <hr style="margin-bottom: 2.6rem">
+  </div>
+</div>
+
+        <div class="trans">
+            <h2>Symbol Not Found. Again.</h2>
+
+  <p>最近把楼下部门提供的 SDK 从主工程抽离到私有源上，将其链接到一个动态库中再被主工程所用。目的是为了转移 main executable 的 TEXT 段的体积到动态库中去（兼容 iOS 8 的痛）。在抽离代码、分析依赖、建 podspec、上传私有源等一顿操作猛如虎后，启动时 dyld 报 symbol not found 的错误。这就很郁闷了。</p>
+<p>通过 <code>$nm -m sdk.a</code> 输出静态库中符号的类型，搜索找不到的类，实锤符号被「隐藏」的事实：</p>
+<p><img src="nm-m.jpg"></p>
+<h2 id="private-external-是什么"><a href="#private-external-是什么" class="headerlink" title="private external 是什么"></a>private external 是什么</h2><p><code>private external</code> 这个看起来矛盾的描述，表示的是仅对「包含」此符号的目标文件而言是<code>external</code>的。也就是为什么当这个类被链接到动态库之后，在 main executable 无法找到的原因，因为使用方和提供方被分割成为了两个目标文件了。至于为什么错误被推迟到了运行时，而没在静态链接的时候报错，原因是项目不知道啥时候加了 <code>-Wl,-undefined,dynamic_lookup</code> 这些 linker flag.</p>
+<p>限制符号可见是有好处的，减少发生链接冲突的可能性、减少链接器的工作量。但是上面这个 case 的符号导出设置不太合理的，因为它作为一个 SDK 假定了自己会被链接到 main executable 中而非其他二进制中（比如动态库）。那要怎么 fix 这个问题呢？有以下几种方式：</p>
+<ol>
+<li>让同事把符号都暴露出来，而这需要协调部门间的版本周期；</li>
+<li>把动态库改为静态库，这样所有的编译产物最终都 「缝合」成一坨二进制，但这显然而和我们的目标冲突；</li>
+<li>在动态库中封装一套接口提供主工程调用，代码稍多一些但可以同时实现两个目标，可还行。</li>
+</ol>
+<p>原本是打算实施方案 3 的，结果运行起来还是出现了 crash，看了下反汇编是使用了 <code>+mainBundle</code> 方法去获得 framework 资源失败而后对实际为 NULL 的<code>NSError **</code>解引用导致。这个坑估计输出过 framework 的人应该都踩过，此处使用 <code>+bundleForClass:</code> 更加安全。所以只能实施方案 1 啦。</p>
+<h2 id="控制符号可见性"><a href="#控制符号可见性" class="headerlink" title="控制符号可见性"></a>控制符号可见性</h2><p>借机梳理下控制符号可见性的姿势，免得以后输出二进制的时候犯类似的错误。先看源码层面的：</p>
+<ol>
+<li><code>static</code>关键字是最常用的控制方式了，将变量的作用域限定在定义它的编译单元中，禁止所有的外部链接，连<code>private external</code>都不是，直接不出现在符号表中，减小输出二进制体积；</li>
+<li>通过设置 visibility 编译属性改变符号的可见性，利用 <code>__attribute__((visibility(&quot;hidden&quot;)))</code> 声明函数或者变量，可以实现<code>private external</code>。</li>
+</ol>
+<p>链接层面的方式：</p>
+<ol>
+<li>使用导出列表，仅适用于动态库 <code>$clang -dynamiclib foo.c -unexported_symbols_list list_you_created</code></li>
+<li>在编译的时候加入 <code>-fvisibility=hidden</code> 参数，也可是实现 <code>private external</code>。 </li>
+</ol>
+<p>考虑更多的时候使用的是 Xcode 的 Build Settings，也要整理下：</p>
+<ol>
+<li>Unexported Symbols File 设置</li>
+<li>Symbols Hidden By Default 设置</li>
+</ol>
+<p>值得注意的是， debug build 一般默认会开启 Enable Testability 的构建选项，这会导致原本<code>private external</code>的符号暴露出去用于自动化测试，使得上面提及的链接层面的手段无效。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Jun 10, 2020</p>
+  
+
+
+          <div class="row mt-2">
+  
+    <div class="eight columns">
+      <p id="madewith"></p>
+    </div>
+
+    <!-- Sepcial thanks to https://simpleicons.org/ for the icons -->
+    <div class="four columns mb-3 posisi" >
+      
+      <a class="ml-0 footer-link icon" href="https://github.com/Kam-To" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="GitHub">
+        <svg class="github svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      
+
+      
+
+      
+      <a class="ml-0 footer-link icon" href="https://twitter.com/KamtoAu" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="Twitter">
+        <svg class="twitter svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Twitter</title><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.555-2.005.959-3.127 1.184-.896-.959-2.173-1.559-3.591-1.559-2.717 0-4.92 2.203-4.92 4.917 0 .39.045.765.127 1.124C7.691 8.094 4.066 6.13 1.64 3.161c-.427.722-.666 1.561-.666 2.475 0 1.71.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.228-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.377 4.604 3.417-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.189 1.394 4.768 2.209 7.557 2.209 9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63.961-.689 1.8-1.56 2.46-2.548l-.047-.02z"/></svg>
+      </a>
+      
+
+      
+
+      
+
+    </div>
+  
+</div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <script src="/js/nanobar.min.js"></script>
+  <script>
+    var options = {
+      classname: 'nanobar',
+      id: 'myNanobar'
+    };
+    var nanobar = new Nanobar(options);
+    nanobar.go(30);
+    nanobar.go(76);
+    nanobar.go(100);
+  </script>
+
+</body>
+
+</html>
