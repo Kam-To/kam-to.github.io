@@ -199,9 +199,9 @@ NSLog(@&quot;%@&quot;, dict);<span aria-hidden="true" class="line-numbers-rows">
 
 <p>啊哈。</p>
 <h2 id="Dive-To-description-Method"><a href="#Dive-To-description-Method" class="headerlink" title="Dive To -description Method"></a>Dive To <code>-description</code> Method</h2><p>通过符号断点 <code>-[NSDictionary description]</code> 很容易发现实际的拼接逻辑实现是在 <code>-[NSDictionary descriptionWithLocale:indent:]</code>，瞧了一眼指令过多，打算让 Hopper 去完成翻译工作。通过 <code>image list CoreFoundation</code> 找到 binary 的路径把它扔进去。</p>
-<p><img src="/images/quote_in_dict/dict_des_asm.jpg"></p>
+<p><img src="dict_des_asm.jpg"></p>
 <p>可见，当 key 或者 value 是<code>NSString</code>类型的时候，使用的是<code>-[NSString _stringRepresentation]</code>的返回值作为输出字符串。接下来的关注点就取到了<code>NSString</code>的这个私有方法上了。可以看到里面的 <code>je</code>, <code>jbe</code>, <code>jne</code> 等跳转指令实在太多了，偷懒继续用 Hopper 分析：</p>
-<p><img src="/images/quote_in_dict/string_represent_asm.jpg"></p>
+<p><img src="string_represent_asm.jpg"></p>
 <p>其中有些逻辑的生成比较诡异，和原本的反汇编指令初入较大，比如上图所发送<code>-getCharacters:range:</code>消息的时候，翻译了个错误的消息接受者。下面红框框住的那段循环比较重要，有上面可以知道 rcx 获得了第一个<code>Unichar</code>，在循环里面不断地遍历这个 buffer，通过一段计算逻辑和判断改变 r14 的值，然后再最后判断 r14 是否为 0（不为零则跳转  loc_29234 执行<code>-[NSString quotedStringRepresentation]</code>）。</p>
 <p>看下 loc_2915c 中运算可能不那么直观， 使用 ASCII 的字符集作为 buffer 跑一下：</p>
 <pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">for</span> <span class="token punctuation">(</span>UniChar rcx <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> rcx <span class="token operator">&lt;</span> <span class="token number">256</span><span class="token punctuation">;</span> rcx<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
