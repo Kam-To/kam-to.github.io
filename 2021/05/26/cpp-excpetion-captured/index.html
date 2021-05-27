@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- Minima -->
+  <!-- Hexo theme created by @adisaktijrs -->
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+
+  
+  <title>CPPExceptionTerminate Crash</title>
+  
+  <link rel="canonical" href="http://example.com/2021/05/26/cpp-excpetion-captured/">
+  
+  <meta name="description" content="又整一个（堆） callstack 没有 user code 的 crash，先看 crash log： Exception Type:  EXC_CRASH (SIGABRT) Exception Codes: 0x00000000 at 0x00000001b609a84c Crashed Th">
+  
+  
+  <meta name="author" content="Kam">
+  
+  <meta property="og:image" content="http://example.comundefined">
+  
+  <meta property="og:site_name" content="KAM" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="CPPExceptionTerminate Crash" />
+  
+  <meta property="og:description" content="又整一个（堆） callstack 没有 user code 的 crash，先看 crash log： Exception Type:  EXC_CRASH (SIGABRT) Exception Codes: 0x00000000 at 0x00000001b609a84c Crashed Th">
+  
+  <meta property="og:url" content="http://example.com/2021/05/26/cpp-excpetion-captured/" />
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CPPExceptionTerminate Crash">
+  
+  <meta name="twitter:description" content="又整一个（堆） callstack 没有 user code 的 crash，先看 crash log： Exception Type:  EXC_CRASH (SIGABRT) Exception Codes: 0x00000000 at 0x00000001b609a84c Crashed Th">
+  
+  
+  <meta name="twitter:image" content="http://example.comundefined">
+  
+  <meta name="twitter:url" content="http://example.com/2021/05/26/cpp-excpetion-captured/" />
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Preload fonts
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="preload" href="../fonts/dm-serif-display-v4-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/inter-v2-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+<link rel="stylesheet" href="/css/normalize.css">
+
+  
+<link rel="stylesheet" href="/css/skeleton.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+<link rel="stylesheet" href="/css/prism-dark.css">
+
+  
+<link rel="stylesheet" href="/css/prism-line-numbers.css">
+
+  <!-- User css -->
+  
+  
+<link rel="stylesheet" href="/css/user.css">
+
+  
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="/images/favicon.jpg">
+
+  <!-- Custom Theme Color Style
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <style>
+  a:not(.icon) {
+    text-decoration-color: #0FA0CE;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 50%,
+      #0FA0CE 50%
+    );
+  }
+  blockquote {
+    border-left: 8px solid #0FA0CE;
+  }
+  .nanobar .bar {
+    background: #0FA0CE;
+  }
+  .button.button-primary:hover,
+  button.button-primary:hover,
+  input[type="submit"].button-primary:hover,
+  input[type="reset"].button-primary:hover,
+  input[type="button"].button-primary:hover,
+  .button.button-primary:focus,
+  button.button-primary:focus,
+  input[type="submit"].button-primary:focus,
+  input[type="reset"].button-primary:focus,
+  input[type="button"].button-primary:focus {
+    background-color: #0FA0CE;
+    border-color: #0FA0CE;
+  }
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    border: 1px solid #0FA0CE;
+  }
+</style>
+
+  <!-- Google Analytics (With Privacy Settings On)
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div>
+
+        <div class="row">
+  <div class="two columns" style="max-width: 50px">
+    <h1 class="mt-2 mode">
+      <div onclick=setDarkMode(true) id="darkBtn">🌚</div>
+      <div onclick=setDarkMode(false) id="lightBtn" class=hidden>🌝</div>
+      <script >
+        if (localStorage.getItem('preferredTheme') == 'dark') {
+          setDarkMode(true)
+        }
+        function setDarkMode(isDark) {
+          var darkBtn = document.getElementById('darkBtn')
+          var lightBtn = document.getElementById('lightBtn')
+          if (isDark) {
+            lightBtn.style.display = "block"
+            darkBtn.style.display = "none"
+            localStorage.setItem('preferredTheme', 'dark');
+          } else {
+            lightBtn.style.display = "none"
+            darkBtn.style.display = "block"
+            localStorage.removeItem('preferredTheme');
+          }
+          document.body.classList.toggle("darkmode");
+        }
+      </script>
+    </h1>
+  </div>
+
+  <div class="six columns ml-1">
+    <h1 class="mt-2">
+      Kam&#39;s Online Notebook
+    </h1>
+  </div>
+
+  <hr style="margin-bottom: 13.7rem">
+
+  <div class="twelve columns">
+    <div class="row">
+      <div class="nine columns left">
+        <a href="/">🏠</a>
+        <!-- 
+         -->
+      </div>
+    </div>
+    <hr style="margin-bottom: 2.6rem">
+  </div>
+</div>
+
+        <div class="trans">
+            <h2>CPPExceptionTerminate Crash</h2>
+
+  <p>又整一个（堆） callstack 没有 user code 的 crash，先看 crash log：</p>
+<pre class="line-numbers language-none"><code class="language-none">Exception Type:  EXC_CRASH (SIGABRT)
+Exception Codes: 0x00000000 at 0x00000001b609a84c
+Crashed Thread:  0
+
+Thread 0 Crashed:
+0   libsystem_kernel.dylib          __pthread_kill  +8
+1   libsystem_pthread.dylib         pthread_kill  +212
+2   libsystem_c.dylib               abort  +100
+3   libc++abi.dylib                 __cxxabiv1::__aligned_malloc_with_fallback(unsigned long)  +0
+4   libc++abi.dylib                 demangling_unexpected_handler()  +0
+5   libobjc.A.dylib                 _objc_terminate()  +124
+6   xyz                             CPPExceptionTerminate() &#x2F;PATH&#x2F;TO&#x2F;KSCrashMonitor_CPPException.cpp:180 +12
+7   libc++abi.dylib                 std::__terminate(void (*)())  +16
+8   libc++abi.dylib                 std::terminate()  +44
+9   libdispatch.dylib               _dispatch_client_callout  +36
+10  libdispatch.dylib               _dispatch_main_queue_callback_4CF$VARIANT$armv81  +856
+11  CoreFoundation                  __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__  +12
+12  CoreFoundation                  __CFRunLoopRun  +2480
+13  CoreFoundation                  CFRunLoopRunSpecific  +572
+14  GraphicsServices                GSEventRunModal  +160
+15  UIKitCore                       -[UIApplication _run]  +1052
+16  UIKitCore                       UIApplicationMain  +164
+17  xyz                             main xyz&#x2F;main.m:33 +28
+18  libdyld.dylib                   start  +4<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="这不对劲-🤨"><a href="#这不对劲-🤨" class="headerlink" title="这不对劲 🤨"></a>这不对劲 🤨</h2><p>从 line 5, 6 可以看出，是 throw 一个 uncaught cpp exception，但是没有 user code。这个现象在 iOS 上很正常的，因为 runloop 本身的历史问题：</p>
+<blockquote>
+<p>And, realistically, if someone were implementing the run loop today, that’s how it’d work.  The reasons why the run loop works the way it currently works are mired in the depths of history. </p>
+<p><a target="_blank" rel="noopener" href="https://developer.apple.com/forums/thread/116305">https://developer.apple.com/forums/thread/116305</a></p>
+</blockquote>
+<p>Runloop 的 exception handler 会 catch 这种异常然后 rethrow，unwind stack 之后原本的触发该异常的 callstack 就丢失了。所以一般自定义 Crash 采集，都会去解决这个问题——通过 link 一个 <code>__cxa_throw</code> 函数替换 C++ ABI 的实现，然后在这个地方就开始记录当前环境的堆栈，之后调用（通常是）原来的实现，其中在里面调用 <code>std::set_terminate</code> 注册好的 handler。</p>
+<p>下面就是 KSCrash 的做法：</p>
+<pre class="line-numbers language-c++" data-language="c++"><code class="language-c++">extern &quot;C&quot;
+&#123;
+    void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void (*dest)(void*)) __attribute__ ((weak));
+
+    void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void (*dest)(void*))
+    &#123;
+        static cxa_throw_type orig_cxa_throw &#x3D; NULL;
+        if (g_cxaSwapEnabled &#x3D;&#x3D; false)
+        &#123;
+            &#x2F;&#x2F; 保存调用栈
+            captureStackTrace(NULL, NULL, NULL);
+        &#125;
+        unlikely_if(orig_cxa_throw &#x3D;&#x3D; NULL)
+        &#123;
+            orig_cxa_throw &#x3D; (cxa_throw_type) dlsym(RTLD_NEXT, &quot;__cxa_throw&quot;);
+        &#125;
+        &#x2F;&#x2F; 调用（可能是）原有的，看 dlsym 的搜索策略及具体存在情况
+        orig_cxa_throw(thrown_exception, tinfo, dest);
+        __builtin_unreachable();
+    &#125;
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>综上，目前所遇到的 crash 堆栈是不正常的，因为 KSCrash 本身是有处理 uncaught C++ exception 的逻辑。</p>
+<h2 id="问题在哪"><a href="#问题在哪" class="headerlink" title="问题在哪"></a>问题在哪</h2><p>首先这个 crash 日志是是 unwind 之后采集到到，即应该是 C++ 或者 ObjC 语言层面上到异常导致，那么测试这两种场景下，异常处理本身发生异常到几种结果：</p>
+<ol>
+<li>发生 Uncaught C++ exception 时，记录堆栈到 <code>__cxa_throw</code> 未被调用：这种情况下采集不到日志，pass；</li>
+<li>发生 Uncaught C++ exception 时，CPPExceptionTerminate 未被调用：与 crash 到日志记录不符合，pass；</li>
+<li>发生 NSException 时，注册到 handler 未被调用，感觉像了：</li>
+</ol>
+<pre class="line-numbers language-none"><code class="language-none">Exception Type:  EXC_CRASH (SIGABRT)
+Exception Codes: 0x00000000 at 0x00007fff51829462
+Crashed Thread:  0
+
+Thread 0 Crashed:
+0   libsystem_kernel.dylib          0x00007fff51829462 __pthread_kill + 10
+1   libsystem_c.dylib               0x00007fff517b9a3c abort + 120
+2   libc++abi.dylib                 0x00007fff4f6d27f8 abort_message + 231
+3   libc++abi.dylib                 0x00007fff4f6d29c7 demangling_terminate_handler() + 262
+4   libobjc.A.dylib                 0x00007fff50864d7c _objc_terminate() + 96
+5   Crash-Tester                    0x000000010c6b9e0a CPPExceptionTerminate() + 2682
+6   libc++abi.dylib                 0x00007fff4f6dfe97 std::__terminate(void (*)()) + 8
+7   libc++abi.dylib                 0x00007fff4f6dfe39 std::terminate() + 41
+8   libdispatch.dylib               0x00007fff516ad795 _dispatch_client_callout + 28
+9   libdispatch.dylib               0x00007fff516b9caa _dispatch_main_queue_callback_4CF + 1212
+10  CoreFoundation                  0x00007fff23b0ce49 CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE + 9
+11  CoreFoundation                  0x00007fff23b07aa9 __CFRunLoopRun + 2329
+12  CoreFoundation                  0x00007fff23b06e66 CFRunLoopRunSpecific + 438
+13  GraphicsServices                0x00007fff38346bb0 GSEventRunModal + 65
+14  UIKitCore                       0x00007fff47578dd0 UIApplicationMain + 1621
+15  Crash-Tester                    0x000000010c673c60 main + 112
+16  libdyld.dylib                   0x00007fff516ecd29 start + 1<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>那么排查的方向可以暂定为「某些代码通过 <code>NSSetUncaughtExceptionHandler</code> 注册了 handler 但处于某些原因没成功调用 KSCrash 注册的 handler」。设个 DDL，就明天，要把这个问题解决了，折腾好些日子了。😭</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — May 26, 2021</p>
+  
+
+
+          <div class="row mt-2">
+  
+    <div class="eight columns">
+      <p id="madewith"></p>
+    </div>
+
+    <!-- Sepcial thanks to https://simpleicons.org/ for the icons -->
+    <div class="four columns mb-3 posisi" >
+      
+      <a class="ml-0 footer-link icon" href="https://github.com/Kam-To" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="GitHub">
+        <svg class="github svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      
+
+      
+
+      
+      <a class="ml-0 footer-link icon" href="https://twitter.com/KamtoAu" target="_blank" style="text-decoration: none" rel="noreferrer" aria-label="Twitter">
+        <svg class="twitter svg-hov" width="18" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Twitter</title><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.555-2.005.959-3.127 1.184-.896-.959-2.173-1.559-3.591-1.559-2.717 0-4.92 2.203-4.92 4.917 0 .39.045.765.127 1.124C7.691 8.094 4.066 6.13 1.64 3.161c-.427.722-.666 1.561-.666 2.475 0 1.71.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.228-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.377 4.604 3.417-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.189 1.394 4.768 2.209 7.557 2.209 9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63.961-.689 1.8-1.56 2.46-2.548l-.047-.02z"/></svg>
+      </a>
+      
+
+      
+
+      
+
+    </div>
+  
+</div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <script src="/js/nanobar.min.js"></script>
+  <script>
+    var options = {
+      classname: 'nanobar',
+      id: 'myNanobar'
+    };
+    var nanobar = new Nanobar(options);
+    nanobar.go(30);
+    nanobar.go(76);
+    nanobar.go(100);
+  </script>
+
+</body>
+
+</html>
