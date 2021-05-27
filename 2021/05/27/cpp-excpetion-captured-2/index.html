@@ -11,11 +11,11 @@
   <meta charset="utf-8">
 
   
-  <title>KAM</title>
+  <title>CPPExceptionTerminate Crash（后续）</title>
   
-  <link rel="canonical" href="http://example.com/">
+  <link rel="canonical" href="http://example.com/2021/05/27/cpp-excpetion-captured-2/">
   
-  <meta name="description" content="">
+  <meta name="description" content="5 月 27 日，阵雨。 前前后后忙了好些事情，今天应该还是解决不了。 倔头路按照昨天的思路，利用 fishhook hook 了 NSSetUncaughtExceptionHandler 函数，统计了下非调试状态下，该函数的使用次数。果然有个第三方 SDK 有向系统注册自己的 exception">
   
   
   <meta name="author" content="Kam">
@@ -24,21 +24,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="KAM" />
+  <meta property="og:title" content="CPPExceptionTerminate Crash（后续）" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="5 月 27 日，阵雨。 前前后后忙了好些事情，今天应该还是解决不了。 倔头路按照昨天的思路，利用 fishhook hook 了 NSSetUncaughtExceptionHandler 函数，统计了下非调试状态下，该函数的使用次数。果然有个第三方 SDK 有向系统注册自己的 exception">
   
-  <meta property="og:url" content="http://example.com/" />
+  <meta property="og:url" content="http://example.com/2021/05/27/cpp-excpetion-captured-2/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KAM">
+  <meta name="twitter:title" content="CPPExceptionTerminate Crash（后续）">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="5 月 27 日，阵雨。 前前后后忙了好些事情，今天应该还是解决不了。 倔头路按照昨天的思路，利用 fishhook hook 了 NSSetUncaughtExceptionHandler 函数，统计了下非调试状态下，该函数的使用次数。果然有个第三方 SDK 有向系统注册自己的 exception">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/" />
+  <meta name="twitter:url" content="http://example.com/2021/05/27/cpp-excpetion-captured-2/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -179,121 +179,24 @@
 </div>
 
         <div class="trans">
-          <div class="row">
-  <!-- <div class="column", > -->
-    <!-- Main information, edit it on theme/_config.yml -->
-    <!-- <h2 class="mb-2"></h2> -->
-    <!-- <p></p> -->
-    <!-- <p></p> -->
-    💼&nbsp;&nbsp;Senior Engineer@NetEase<br><br> 
-    🚗&nbsp;&nbsp;Mini(1:64) Diecast Cars Collector<br><br> 
-    🎵&nbsp;&nbsp;Now listening... Led Zeppelin, Beatles<br><br> 
-  <!-- </div> -->
-</div>
+            <h2>CPPExceptionTerminate Crash（后续）</h2>
 
-<h3>Recent</h3>
+  <p>5 月 27 日，阵雨。</p>
+<p>前前后后忙了好些事情，今天应该还是解决不了。</p>
+<h2 id="倔头路"><a href="#倔头路" class="headerlink" title="倔头路"></a>倔头路</h2><p>按照昨天的思路，利用 fishhook hook 了 <code>NSSetUncaughtExceptionHandler</code> 函数，统计了下非调试状态下，该函数的使用次数。果然有个第三方 SDK 有向系统注册自己的 exception handler：</p>
+<pre class="line-numbers language-objc" data-language="objc"><code class="language-objc">+[MOBFNotificationCenter _setupCrashLogMonitor]<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>但跟踪了一下他们的 handler 方法，感觉没啥问题，反汇编做了三个事情：</p>
+<ul>
+<li>一个是发出名为 ApplicationCrash 的通知；</li>
+<li>二是打印（只留下一个方法调用，实现代码应该是通过条件编译剔除掉了）异常；</li>
+<li>三是礼貌地传递异常。</li>
+</ul>
+<p>这么看来，我认为这并不是产生前文所描述的「不正常」crash 日志的罪魁祸首。</p>
+<p>由于 KSCrash 的接入是公司内部的平台提供的二进制，看不到源码，所以我把最后的希望寄托于两个注册逻辑发生在不同线程导致 racing condition 的发生，这样基本可以结案了。可惜跟踪了下注册都发生在主线程。走到倔头路了。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — May 27, 2021</p>
+  
 
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 27, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/27/cpp-excpetion-captured-2/" >
-      
-        CPPExceptionTerminate Crash（后续）
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/26/cpp-excpetion-captured/" >
-      
-        CPPExceptionTerminate Crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 19, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/19/cons_about_binary_packaging/" >
-      
-        组件二进制化初期遇到的问题
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 18, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/18/objc_attr_at_binary/" >
-      
-        基于 Mach-O 的内存管理语义分析
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 16, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/08/16/a_keyboard_crash/" >
-      
-        记一个 callstack 没有 user code 的 crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 5, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/08/05/ret_val_on_lldb_br/" >
-      
-        在 lldb 中命中函数断点后自动输出返回值
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 6, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/07/06/stack_bt_lua_and_c/" >
-      
-        包装下 Lua 与 C/C++ 宿主交互
-      
-    </a>
-  </div>
-</div>
-
-
-<h5> <a href="/archives">All Posts</a></h5>
 
           <div class="row mt-2">
   

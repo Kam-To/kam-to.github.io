@@ -266,7 +266,7 @@ Thread 0 Crashed:
 15  Crash-Tester                    0x000000010c673c60 main + 112
 16  libdyld.dylib                   0x00007fff516ecd29 start + 1<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
-<p>那么排查的方向可以暂定为「某些代码通过 <code>NSSetUncaughtExceptionHandler</code> 注册了 handler 但出于某些原因没成功调用 KSCrash 注册的 handler」。设个 DDL，就明天，要把这个问题解决了，折腾好些日子了。😭</p>
+<p>那么排查的方向可以暂定为「某些代码通过 <code>NSSetUncaughtExceptionHandler</code> 注册了 handler 但出于某些原因没成功调用 KSCrash 注册的 handler」。设个 DDL，就明天，要把这个问题解决，折腾好些日子了。</p>
 <h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
   <p> — May 26, 2021</p>
   
