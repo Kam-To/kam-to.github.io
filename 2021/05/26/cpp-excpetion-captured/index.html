@@ -237,7 +237,7 @@ Thread 0 Crashed:
 &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
 <p>综上，目前所遇到的 crash 堆栈是「不正常」的，因为 KSCrash 本身是有处理 uncaught C++ exception 的逻辑。</p>
-<h2 id="问题在哪"><a href="#问题在哪" class="headerlink" title="问题在哪"></a>问题在哪</h2><p>首先这个 crash 日志是是 unwind 之后采集到到，即应该是 C++ 或者 ObjC 语言层面上的异常导致，那么测试这两种场景下，「异常处理本身」发生异常到几种结果：</p>
+<h2 id="问题在哪"><a href="#问题在哪" class="headerlink" title="问题在哪"></a>问题在哪</h2><p>首先这个 crash 日志是是 unwind 之后采集到的，即应该是应用层面上的异常导致，那么测试这两种场景下，「异常处理本身」发生异常到几种结果：</p>
 <ol>
 <li>发生 ucaught C++ exception 时，记录堆栈到 <code>__cxa_throw</code> 未被调用：这种情况下采集不到日志，pass；</li>
 <li>发生 uncaught C++ exception 时，<code>CPPExceptionTerminate</code> 未被调用：与 crash 到日志记录不符合，pass；</li>
