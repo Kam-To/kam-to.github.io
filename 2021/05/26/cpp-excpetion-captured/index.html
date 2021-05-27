@@ -207,7 +207,7 @@ Thread 0 Crashed:
 17  xyz                             main xyz&#x2F;main.m:33 +28
 18  libdyld.dylib                   start  +4<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
-<h2 id="这不对劲-🤨"><a href="#这不对劲-🤨" class="headerlink" title="这不对劲 🤨"></a>这不对劲 🤨</h2><p>从 line 5, 6 可以看出，是 throw 一个 uncaught cpp exception，但是没有 user code。这个现象在 iOS 上很正常的，这是 runloop 本身的历史问题：</p>
+<h2 id="这不对劲-🤨"><a href="#这不对劲-🤨" class="headerlink" title="这不对劲 🤨"></a>这不对劲 🤨</h2><p>从 line 5, 6 可以看出，是 throw 一个 uncaught C++ exception（或 NSException，依托于 C++ exception 实现），但是没有 user code。这个现象在 iOS 上很正常的，这是 runloop 本身的历史问题：</p>
 <blockquote>
 <p>And, realistically, if someone were implementing the run loop today, that’s how it’d work.  The reasons why the run loop works the way it currently works are mired in the depths of history. </p>
 <p><a target="_blank" rel="noopener" href="https://developer.apple.com/forums/thread/116305">https://developer.apple.com/forums/thread/116305</a></p>
@@ -241,7 +241,7 @@ Thread 0 Crashed:
 <ol>
 <li>发生 ucaught C++ exception 时，记录堆栈到 <code>__cxa_throw</code> 未被调用：这种情况下采集不到日志，pass；</li>
 <li>发生 uncaught C++ exception 时，<code>CPPExceptionTerminate</code> 未被调用：与 crash 到日志记录不符合，pass；</li>
-<li>发生 NSException 时，注册到 handler 未被调用，有内味了：</li>
+<li>发生 NSException 时，KSCrash 注册的 handler 未被调用，有内味了：</li>
 </ol>
 <pre class="line-numbers language-none"><code class="language-none">Exception Type:  EXC_CRASH (SIGABRT)
 Exception Codes: 0x00000000 at 0x00007fff51829462
