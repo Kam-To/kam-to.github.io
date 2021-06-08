@@ -15,7 +15,7 @@
   
   <link rel="canonical" href="http://example.com/2021/06/08/compiling/">
   
-  <meta name="description" content="">
+  <meta name="description" content="今天打开 Developer app loading 的时候发现「🌼compiling…」。 好家伙，难道是用了什么不得了的动态化技术做首页吗？于是用 lldb attach 它一下，看看视图：  通过 NSApplication 找到了一个NSView 并用 _subtreeDescriptio">
   
   
   <meta name="author" content="Kam">
@@ -26,14 +26,14 @@
   <meta property="og:type" content="article" />
   <meta property="og:title" content="compiling..." />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="今天打开 Developer app loading 的时候发现「🌼compiling…」。 好家伙，难道是用了什么不得了的动态化技术做首页吗？于是用 lldb attach 它一下，看看视图：  通过 NSApplication 找到了一个NSView 并用 _subtreeDescriptio">
   
   <meta property="og:url" content="http://example.com/2021/06/08/compiling/" />
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="compiling...">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="今天打开 Developer app loading 的时候发现「🌼compiling…」。 好家伙，难道是用了什么不得了的动态化技术做首页吗？于是用 lldb attach 它一下，看看视图：  通过 NSApplication 找到了一个NSView 并用 _subtreeDescriptio">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
@@ -182,7 +182,14 @@
             <h2>compiling...</h2>
 
   <p><img src="compiling....png"></p>
-
+<p>今天打开 Developer app loading 的时候发现「🌼compiling…」。</p>
+<p>好家伙，难道是用了什么不得了的动态化技术做首页吗？于是用 lldb attach 它一下，看看视图：</p>
+<p><img src="structure1.jpg"></p>
+<p>通过 NSApplication 找到了一个<code>NSView</code> 并用 <code>_subtreeDescription</code> 打印出视图层级，关注<code>UINSSceneView</code>和<code>UINSInput</code>，测试两个视图隐藏的情况，前者隐藏导致 UI 元素不可见，后者会导致不可交互。</p>
+<p>奇怪的是<code>UINSSceneView</code>并没有更多的 subview，于是通过 image lookup 查找它的所有方法，发现<code>uiWidnows</code>属性，打印一下，居然是<code>UIWindow</code>！</p>
+<p><img src="structure2.jpg"></p>
+<p>破案了，应该就是 MacCatalyst 下的用 Swift + UIKit 的一个页面。所以「compiling…」还真就一文案。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
   <p> — Jun 8, 2021</p>
   
 
