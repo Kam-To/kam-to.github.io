@@ -11,11 +11,11 @@
   <meta charset="utf-8">
 
   
-  <title>KAM</title>
+  <title>UIButton 响应延迟</title>
   
-  <link rel="canonical" href="http://example.com/page/2/">
+  <link rel="canonical" href="http://example.com/2021/06/17/tap-lag/">
   
-  <meta name="description" content="">
+  <meta name="description" content="最近在做需求时，发现在 App 的五个 tab 间切换的时，消息 tab 的 view controller 总是慢一拍。其他页面基本是 touch up inside 后立刻出现，而消息 tab 则总是慢 100~200 ms，心生疑惑。 Instruments 组合拳拿出祖传的卡顿排查组合拳进行">
   
   
   <meta name="author" content="Kam">
@@ -24,21 +24,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="KAM" />
+  <meta property="og:title" content="UIButton 响应延迟" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="最近在做需求时，发现在 App 的五个 tab 间切换的时，消息 tab 的 view controller 总是慢一拍。其他页面基本是 touch up inside 后立刻出现，而消息 tab 则总是慢 100~200 ms，心生疑惑。 Instruments 组合拳拿出祖传的卡顿排查组合拳进行">
   
-  <meta property="og:url" content="http://example.com/page/2/" />
+  <meta property="og:url" content="http://example.com/2021/06/17/tap-lag/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KAM">
+  <meta name="twitter:title" content="UIButton 响应延迟">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="最近在做需求时，发现在 App 的五个 tab 间切换的时，消息 tab 的 view controller 总是慢一拍。其他页面基本是 touch up inside 后立刻出现，而消息 tab 则总是慢 100~200 ms，心生疑惑。 Instruments 组合拳拿出祖传的卡顿排查组合拳进行">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/page/2/" />
+  <meta name="twitter:url" content="http://example.com/2021/06/17/tap-lag/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -179,121 +179,24 @@
 </div>
 
         <div class="trans">
-          <div class="row">
-  <!-- <div class="column", > -->
-    <!-- Main information, edit it on theme/_config.yml -->
-    <!-- <h2 class="mb-2"></h2> -->
-    <!-- <p></p> -->
-    <!-- <p></p> -->
-    💼&nbsp;&nbsp;Senior Engineer@NetEase<br><br> 
-    🚗&nbsp;&nbsp;Mini(1:64) Diecast Cars Collector<br><br> 
-    🎵&nbsp;&nbsp;Now listening... Led Zeppelin, Beatles<br><br> 
-  <!-- </div> -->
-</div>
+            <h2>UIButton 响应延迟</h2>
 
-<h3>Recent</h3>
+  <p>最近在做需求时，发现在 App 的五个 tab 间切换的时，消息 tab 的 view controller 总是慢一拍。其他页面基本是 touch up inside 后立刻出现，而消息 tab 则总是慢 100~200 ms，心生疑惑。</p>
+<h2 id="Instruments-组合拳"><a href="#Instruments-组合拳" class="headerlink" title="Instruments 组合拳"></a>Instruments 组合拳</h2><p>拿出祖传的卡顿排查组合拳进行分析调试： </p>
+<ul>
+<li>Time Profiler：高频率（调整下 recording options）采集 callstack、CPU usage，定位问题代码；</li>
+<li>Thread State Trace：关注目标线程（通常是 Main thread）的状态。为什么 Time Profiler 还不足以满足需求？举了例子，使用 Time Profiler 看到一个 function 调用 self weight 只有 1ms，但很可能由于触发了如跨进程通信导致当前 thread 进入 blocked 状态，而此时 CPU usage 为 0，那么就不容易找到这个 wall-time cost。</li>
+<li>Point of Interest：方便在面板上显示代码上标定的起始区域。</li>
+</ul>
+<p>下图 POI track 的 A B 两行分别是点击「我 tab」和「消息 tab」时产生的 record region，start point 是 tabBarController 的回调，end point 是 <code>-viewDidAppear:</code> 方法。</p>
+<p><img src="profiler.jpg"></p>
+<p>起初对比了很久 A B 两个区域的 Main Thread 的耗时，一个 60ms 一个 50ms 相差无几，硬是整不明白为什么会有可感知的延迟。</p>
+<p>后来对比下其他 thread 的异同，才发现上图绿框、蓝框凸显的特征——顶部是触摸事件的派发线程，可见点击「消息 tab」的触摸事件派发，到 tabBarController 的回调开始，出现了时间差。</p>
+<p>回到 TabBar 控件看源码才知道，消息 tab 的 UIButton 被同事加了单击、双击两个手势识别器，这下整明白了，好家伙。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Jun 17, 2021</p>
+  
 
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 17, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/17/tap-lag/" >
-      
-        UIButton 响应延迟
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 8, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/08/compiling/" >
-      
-        compiling...
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 2, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/02/why-it-works-excluded-archs-arm64-md/" >
-      
-        解决 ARM Simulator 的 link 错误
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 27, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/27/cpp-excpetion-captured-2/" >
-      
-        CPPExceptionTerminate Crash（后续）
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/26/cpp-excpetion-captured/" >
-      
-        CPPExceptionTerminate Crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 19, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/19/cons_about_binary_packaging/" >
-      
-        组件二进制化初期遇到的问题
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 18, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/18/objc_attr_at_binary/" >
-      
-        基于 Mach-O 的内存管理语义分析
-      
-    </a>
-  </div>
-</div>
-
-
-<h5> <a href="/archives">All Posts</a></h5>
 
           <div class="row mt-2">
   
