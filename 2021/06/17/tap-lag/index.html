@@ -185,7 +185,7 @@
 <h2 id="Instruments-组合拳"><a href="#Instruments-组合拳" class="headerlink" title="Instruments 组合拳"></a>Instruments 组合拳</h2><p>拿出祖传的卡顿排查组合拳进行分析调试： </p>
 <ul>
 <li>Time Profiler：高频率（调整下 recording options）采集 callstack、CPU usage，定位问题代码；</li>
-<li>Thread State Trace：关注目标线程（通常是 Main thread）的状态。为什么 Time Profiler 还不足以满足需求？举了例子，使用 Time Profiler 看到一个 function 调用 self weight 只有 1ms，但很可能由于触发了如跨进程通信导致当前 thread 进入 blocked 状态，而此时 CPU usage 为 0，那么就不容易找到这个 wall-time cost。</li>
+<li>Thread State Trace：关注目标线程（通常是 Main thread）的状态。为什么 Time Profiler 还不足以满足需求？举个例子，使用 Time Profiler 看到一个 function 调用 self weight 只有 1ms，但很可能由于触发了如跨进程通信导致当前 thread 进入 blocked 状态，而此时 CPU usage 为 0，那么就不容易找到这个 wall-time cost。</li>
 <li>Point of Interest：方便在面板上显示代码上标定的起始区域。</li>
 </ul>
 <p>下图 POI track 的 A B 两行分别是点击「消息 tab」和「我 tab」时产生的 record region，start point 是 tabBarController 的回调，end point 是 <code>-viewDidAppear:</code> 方法。</p>
