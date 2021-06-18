@@ -188,7 +188,7 @@
 <li>Thread State Trace：关注目标线程（通常是 Main thread）的状态。为什么 Time Profiler 还不足以满足需求？举了例子，使用 Time Profiler 看到一个 function 调用 self weight 只有 1ms，但很可能由于触发了如跨进程通信导致当前 thread 进入 blocked 状态，而此时 CPU usage 为 0，那么就不容易找到这个 wall-time cost。</li>
 <li>Point of Interest：方便在面板上显示代码上标定的起始区域。</li>
 </ul>
-<p>下图 POI track 的 A B 两行分别是点击「我 tab」和「消息 tab」时产生的 record region，start point 是 tabBarController 的回调，end point 是 <code>-viewDidAppear:</code> 方法。</p>
+<p>下图 POI track 的 A B 两行分别是点击「消息 tab」和「我 tab」时产生的 record region，start point 是 tabBarController 的回调，end point 是 <code>-viewDidAppear:</code> 方法。</p>
 <p><img src="profiler.jpg"></p>
 <p>起初对比了很久 A B 两个区域的 Main Thread 的耗时，一个 60ms 一个 50ms 相差无几，硬是整不明白为什么会有可感知的延迟。</p>
 <p>后来对比下其他 thread 的异同，才发现上图绿框、蓝框凸显的特征——顶部是触摸事件的派发线程，可见点击「消息 tab」的触摸事件派发，到 tabBarController 的回调开始，出现了时间差。</p>
