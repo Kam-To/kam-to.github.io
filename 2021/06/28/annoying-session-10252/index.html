@@ -11,11 +11,11 @@
   <meta charset="utf-8">
 
   
-  <title>All Posts - Kam</title>
+  <title>DON&#39;T TRUST  BETA SOFEWAER</title>
   
-  <link rel="canonical" href="http://example.com/archives/2021/06/">
+  <link rel="canonical" href="http://example.com/2021/06/28/annoying-session-10252/">
   
-  <meta name="description" content="">
+  <meta name="description" content="出于写技术分享的原因去验证了下 iOS 15 上对 diffable data source 两个 API 的改进，有些情况比较尴尬。 apply &amp;amp; reconfigureItemsWWDC 2021 Session 10252 - Make blazing fast lists and ">
   
   
   <meta name="author" content="Kam">
@@ -24,21 +24,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="All Posts - Kam" />
+  <meta property="og:title" content="DON&#39;T TRUST  BETA SOFEWAER" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="出于写技术分享的原因去验证了下 iOS 15 上对 diffable data source 两个 API 的改进，有些情况比较尴尬。 apply &amp;amp; reconfigureItemsWWDC 2021 Session 10252 - Make blazing fast lists and ">
   
-  <meta property="og:url" content="http://example.com/archives/2021/06/" />
+  <meta property="og:url" content="http://example.com/2021/06/28/annoying-session-10252/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="All Posts - Kam">
+  <meta name="twitter:title" content="DON&#39;T TRUST  BETA SOFEWAER">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="出于写技术分享的原因去验证了下 iOS 15 上对 diffable data source 两个 API 的改进，有些情况比较尴尬。 apply &amp;amp; reconfigureItemsWWDC 2021 Session 10252 - Make blazing fast lists and ">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/archives/2021/06/" />
+  <meta name="twitter:url" content="http://example.com/2021/06/28/annoying-session-10252/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -179,80 +179,24 @@
 </div>
 
         <div class="trans">
-          
-<h2>All Posts</h2>
+            <h2>DON'T TRUST  BETA SOFEWAER</h2>
 
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jun 28, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/06/28/annoying-session-10252/" class="">
-            
-              DON'T TRUST  BETA SOFEWAER
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jun 17, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/06/17/tap-lag/" class="">
-            
-              UIButton 响应延迟
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jun 8, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/06/08/compiling/" class="">
-            
-              compiling...
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jun 2, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/06/02/why-it-works-excluded-archs-arm64-md/" class="">
-            
-              解决 ARM Simulator 的 link 错误
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-<div class="pagination-bar">
-  <ul class="pagination">
-    
-    
-  </ul>
-</div>
+  <p>出于写技术分享的原因去验证了下 iOS 15 上对 diffable data source 两个 API 的改进，有些情况比较尴尬。</p>
+<h2 id="apply-amp-reconfigureItems"><a href="#apply-amp-reconfigureItems" class="headerlink" title="apply &amp; reconfigureItems"></a>apply &amp; reconfigureItems</h2><p><a target="_blank" rel="noopener" href="https://developer.apple.com/videos/play/wwdc2021/10252/">WWDC 2021 Session 10252 - Make blazing fast lists and collection views</a> 提到说 iOS 15 之后，调用 <code>apply(_:animatingDifferences:completion:)</code> without animation 可以从过去的 <code>reloadData</code>提升到 diff 局部刷新，然后新增 <code>reconfigureItems(_:)</code> 实现 on-cell reloading，这不偷了两年懒才整出来的活儿吗哈哈？</p>
+<p>但是比较尴尬的时候，我弄了个 demo 测试着两个 API 的变化，结果在 remove/reconfig item 之后，都出现了一个 hidden cell 的冗余配置：</p>
+<p><img src="apply_14_vs_15.png"></p>
+<p>iOS 14 中屏幕上的所有 cell 走完 enqueue\dequeue\configure 流程，所以 cell 与的 indexPath 对应关系在刷新前后发生了较大的变化；</p>
+<p>iOS 15 在同样的调用下，会计算 diff 实现数据刷新，移除最后一个 cell（0x12ce4ed90），而不再做额外的工作。但出现了一个 hidden cell 配置了许多次。</p>
+<p><img src="re_14_vs_15.png"></p>
+<p>调用 reconfigure 也有类似的现象。折腾并研究半天之后，将此<a target="_blank" rel="noopener" href="https://developer.apple.com/forums/thread/683775">问题</a> post 在到论坛上，等了一天终于等到了 Apple 工程师的耐心解答：</p>
+<blockquote>
+<p>Please give it a try on iOS 15 beta 2, there are new optimizations in beta 2 (which were not in beta 1) that will reduce or eliminate the number of extra cells requested when you use <code>apply(_:animatingDifferences:)</code>. In some cases, you may still see a few extra cells requested, but this will usually only happen the first time you apply a snapshot. The reason that extra cells can be requested sometimes is because UICollectionView needs to perform self-sizing of some cells near the visible region in order to resolve estimated sizes and accurately determine which cells need to be visible, so in certain cases it will ask for cells that may not immediately become visible. However, in iOS 15 any extra cells requested for self-sizing will be kept cached by UICollectionView as prepared cells (similar to the way cells get prefetched), so that they can be immediately made visible when you scroll to them.</p>
+<p> — Frameworks Engineer  5 hours ago </p>
+</blockquote>
+<p><strong>结论：如题。</strong></p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Jun 28, 2021</p>
+  
 
 
           <div class="row mt-2">
