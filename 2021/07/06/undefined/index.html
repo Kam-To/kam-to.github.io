@@ -11,11 +11,11 @@
   <meta charset="utf-8">
 
   
-  <title>KAM</title>
+  <title>Relocation 中的一个 UB</title>
   
-  <link rel="canonical" href="http://example.com/page/2/">
+  <link rel="canonical" href="http://example.com/2021/07/06/undefined/">
   
-  <meta name="description" content="">
+  <meta name="description" content="起因是同事更新了项目所使用的百度地图 SDK 之后，我们的 XML 解析库就没法用了。解析库每次运行到 xmlFree 函数就会跳到 baidu 开头的另一个函数里面去，然后爆出：  Pointer being freed was not allocated  看起来像是调用 libxml 的 xm">
   
   
   <meta name="author" content="Kam">
@@ -24,21 +24,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="KAM" />
+  <meta property="og:title" content="Relocation 中的一个 UB" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="起因是同事更新了项目所使用的百度地图 SDK 之后，我们的 XML 解析库就没法用了。解析库每次运行到 xmlFree 函数就会跳到 baidu 开头的另一个函数里面去，然后爆出：  Pointer being freed was not allocated  看起来像是调用 libxml 的 xm">
   
-  <meta property="og:url" content="http://example.com/page/2/" />
+  <meta property="og:url" content="http://example.com/2021/07/06/undefined/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KAM">
+  <meta name="twitter:title" content="Relocation 中的一个 UB">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="起因是同事更新了项目所使用的百度地图 SDK 之后，我们的 XML 解析库就没法用了。解析库每次运行到 xmlFree 函数就会跳到 baidu 开头的另一个函数里面去，然后爆出：  Pointer being freed was not allocated  看起来像是调用 libxml 的 xm">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/page/2/" />
+  <meta name="twitter:url" content="http://example.com/2021/07/06/undefined/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -179,247 +179,38 @@
 </div>
 
         <div class="trans">
-          <div class="row">
-  <!-- <div class="column", > -->
-    <!-- Main information, edit it on theme/_config.yml -->
-    <!-- <h2 class="mb-2"></h2> -->
-    <!-- <p></p> -->
-    <!-- <p></p> -->
-    💼&nbsp;&nbsp;Senior Engineer@NetEase<br><br> 
-    🚗&nbsp;&nbsp;Mini(1:64) Diecast Cars Collector<br><br> 
-    🎵&nbsp;&nbsp;Now listening... Led Zeppelin, Beatles<br><br> 
-  <!-- </div> -->
-</div>
+            <h2>Relocation 中的一个 UB</h2>
 
-<h3>Recent</h3>
+  <p>起因是同事更新了项目所使用的百度地图 SDK 之后，我们的 XML 解析库就没法用了。解析库每次运行到 <code>xmlFree</code> 函数就会跳到 <code>baidu</code> 开头的另一个函数里面去，然后爆出：</p>
+<blockquote>
+<p>Pointer being freed was not allocated</p>
+</blockquote>
+<p>看起来像是调用 <code>libxml</code> 的 <code>xmlFree</code> 函数代码，最后调用了百度提供的实现。</p>
+<h2 id="Reproduce"><a href="#Reproduce" class="headerlink" title="Reproduce"></a>Reproduce</h2><p>已知 XML 解析库和百度 SDK 都是静态库，然后 XML 解析库引用了  <code>libxml</code> 的 <code>xmlFree</code> 函数，所以很容易重现。</p>
+<pre class="line-numbers language-none"><code class="language-none">&#x2F;&#x2F; in A.a, a.o
+void xmlFree(void *ptr) &#123;   
+&#125;
 
+&#x2F;&#x2F; in B.a, b.o
+#import &lt;libxml&#x2F;HTMLparser.h&gt;
+#import &lt;libxml&#x2F;xpath.h&gt;
+#import &lt;libxml&#x2F;xpathInternals.h&gt;
 
-<div class="row">
+void foo(void) &#123;
+    xmlFree(NULL);
+&#125;
 
-  <div class="three columns left lit">
-    <p class="bottom">Jul 6, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/06/undefined/" >
-      
-        Relocation 中的一个 UB
-      
-    </a>
-  </div>
-</div>
+&#x2F;&#x2F; in main executable
+foo()<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
-<div class="row">
+<p>测试了一下，发现是 A.a 里面的 <code>extern xmlFree</code> 的存在，会导致在重定位阶段把 b.o 的 <code>foo</code> 对 <code>xmlFree</code> 的引用指向了 A.a 中的定义。而且这样的结果貌似是未定义行为，暂时还没搜索到具体文档说明。</p>
+<p>顺便提一下，两个静态库函数同名 linkage 会报错；两个动态库函数同名就跟动态链接顺序相关。不过这都不是什么好的工程实践，SDK 提供方还是得注意符号可见性问题。</p>
+<h2 id="Resolution"><a href="#Resolution" class="headerlink" title="Resolution"></a>Resolution</h2><p>具体到这个案例上，只能先把 SDK 降回去，因为符号可见性的改变需要 SDK 提供方执行。</p>
+<p>题外话，说起来 SDK 提供方对命名空间缺失的漠视（符号可见性控制、category naming clash），我觉得这么些年就没几个人在意过。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Jul 6, 2021</p>
+  
 
-  <div class="three columns left lit">
-    <p class="bottom">Jul 5, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/05/didi/" >
-      
-        滴滴在舆情下或难再翻身
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 3, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/03/sony/" >
-      
-        SONY 辱华-被灌输的集体记忆
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 28, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/28/annoying-session-10252/" >
-      
-        Don't trust  beta software
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 17, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/17/tap-lag/" >
-      
-        UIButton 响应延迟
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 8, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/08/compiling/" >
-      
-        compiling...
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 2, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/02/why-it-works-excluded-archs-arm64-md/" >
-      
-        解决 ARM Simulator 的 link 错误
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 27, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/27/cpp-excpetion-captured-2/" >
-      
-        CPPExceptionTerminate Crash（后续）
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/26/cpp-excpetion-captured/" >
-      
-        CPPExceptionTerminate Crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 19, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/19/cons_about_binary_packaging/" >
-      
-        组件二进制化初期遇到的问题
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 18, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/18/objc_attr_at_binary/" >
-      
-        基于 Mach-O 的内存管理语义分析
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 16, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/08/16/a_keyboard_crash/" >
-      
-        记一个 callstack 没有 user code 的 crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 5, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/08/05/ret_val_on_lldb_br/" >
-      
-        在 lldb 中命中函数断点后自动输出返回值
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 6, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/07/06/stack_bt_lua_and_c/" >
-      
-        包装下 Lua 与 C/C++ 宿主交互
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 10, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/06/10/controlling_symbols_visibility/" >
-      
-        Symbol Not Found. Again.
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 10, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/06/10/quote_in_dict/" >
-      
-        一个 NSDictionary 无用的冷知识
-      
-    </a>
-  </div>
-</div>
-
-
-<h5> <a href="/archives">All Posts</a></h5>
 
           <div class="row mt-2">
   
