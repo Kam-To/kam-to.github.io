@@ -194,8 +194,8 @@
 <p>原本是打算实施方案 3 的，结果运行起来还是出现了 crash，看了下反汇编是使用了 <code>+mainBundle</code> 方法去获得 framework 资源失败而后对实际为 NULL 的<code>NSError **</code>解引用导致。这个坑估计输出过 framework 的人应该都踩过，此处使用 <code>+bundleForClass:</code> 更加安全。所以只能实施方案 1 啦。</p>
 <h2 id="控制符号可见性"><a href="#控制符号可见性" class="headerlink" title="控制符号可见性"></a>控制符号可见性</h2><p>借机梳理下控制符号可见性的姿势，免得以后输出二进制的时候犯类似的错误。先看源码层面的：</p>
 <ol>
-<li><code>static</code>关键字是最常用的控制方式了，将变量的作用域限定在定义它的编译单元中，禁止所有的外部链接，连<code>private external</code>都不是，直接不出现在符号表中，减小输出二进制体积；</li>
-<li>通过设置 visibility 编译属性改变符号的可见性，利用 <code>__attribute__((visibility(&quot;hidden&quot;)))</code> 声明函数或者变量，可以实现<code>private external</code>。</li>
+<li><code>static </code>关键字是最常用的控制方式了，将变量的作用域限定在定义它的编译单元中，禁止所有的外部链接，连 <code>private external</code> 都不是，直接不出现在符号表中，减小输出二进制体积；</li>
+<li>通过设置 visibility 编译属性改变符号的可见性，利用 <code>__attribute__((visibility(&quot;hidden&quot;)))</code> 声明函数或者变量，可以实现 <code>private external</code>。</li>
 </ol>
 <p>链接层面的方式：</p>
 <ol>

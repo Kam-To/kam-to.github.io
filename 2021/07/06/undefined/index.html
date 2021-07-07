@@ -204,7 +204,7 @@ void foo(void) &#123;
 foo()<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
 <p>测试了一下，发现是 A.a 里面的 <code>extern xmlFree</code> 的存在，会导致在重定位阶段把 b.o 的 <code>foo</code> 对 <code>xmlFree</code> 的引用指向了 A.a 中的定义。而且这样的结果貌似是未定义行为，暂时还没搜索到具体文档说明。</p>
-<p>顺便提一下，两个静态库函数同名 linkage 会报错；两个动态库函数同名就跟动态链接顺序相关。不过这都不是什么好的工程实践，SDK 提供方还是得注意符号可见性问题。</p>
+<p>顺便提一下，两个静态库函数同名 linkage 会报错；两个动态库函数同名实际调用顺序就跟动态链接顺序相关。不过这都不是什么好的工程实践，SDK 提供方还是得注意符号可见性问题。</p>
 <h2 id="Resolution"><a href="#Resolution" class="headerlink" title="Resolution"></a>Resolution</h2><p>具体到这个案例上，只能先把 SDK 降回去，因为符号可见性的改变需要 SDK 提供方执行。</p>
 <p>题外话，说起来 SDK 提供方对命名空间缺失的漠视（符号可见性控制、category naming clash），我觉得这么些年就没几个人在意过。</p>
 <h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
