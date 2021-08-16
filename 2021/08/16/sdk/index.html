@@ -11,12 +11,12 @@
   <meta charset="utf-8">
 
   
-  <title>KAM</title>
+  <title>输出 Framework 的一些琐事</title>
   <meta name="theme-color" content="#7956b7">
   
-  <link rel="canonical" href="http://example.com/">
+  <link rel="canonical" href="http://example.com/2021/08/16/sdk/">
   
-  <meta name="description" content="">
+  <meta name="description" content="最近接手了一个针对未成年防沉迷认证的半成品 SDK，魔改了一番（接口改动、项目组织、多个业务方版本、打包），简单记录一下。 琐事FrameworkFramework 在 Apple 定义上看就是组织资源的一种动态库。如果你把 mach-o 设置 static library，通常没啥问题，但是如果 ">
   
   
   <meta name="author" content="Kam">
@@ -25,21 +25,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="KAM" />
+  <meta property="og:title" content="输出 Framework 的一些琐事" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="最近接手了一个针对未成年防沉迷认证的半成品 SDK，魔改了一番（接口改动、项目组织、多个业务方版本、打包），简单记录一下。 琐事FrameworkFramework 在 Apple 定义上看就是组织资源的一种动态库。如果你把 mach-o 设置 static library，通常没啥问题，但是如果 ">
   
-  <meta property="og:url" content="http://example.com/" />
+  <meta property="og:url" content="http://example.com/2021/08/16/sdk/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KAM">
+  <meta name="twitter:title" content="输出 Framework 的一些琐事">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="最近接手了一个针对未成年防沉迷认证的半成品 SDK，魔改了一番（接口改动、项目组织、多个业务方版本、打包），简单记录一下。 琐事FrameworkFramework 在 Apple 定义上看就是组织资源的一种动态库。如果你把 mach-o 设置 static library，通常没啥问题，但是如果 ">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/" />
+  <meta name="twitter:url" content="http://example.com/2021/08/16/sdk/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -180,261 +180,33 @@
 </div>
 
         <div class="trans">
-          <div class="row">
-  <!-- <div class="column", > -->
-    <!-- Main information, edit it on theme/_config.yml -->
-    <!-- <h2 class="mb-2"></h2> -->
-    <!-- <p></p> -->
-    <!-- <p></p> -->
-    💼&nbsp;&nbsp;Senior Engineer@NetEase<br><br> 
-    🚗&nbsp;&nbsp;Mini(1:64) Diecast Cars Collector<br><br> 
-    🎵&nbsp;&nbsp;Now listening... Led Zeppelin, Beatles<br><br> 
-  <!-- </div> -->
-</div>
+            <h2>输出 Framework 的一些琐事</h2>
 
-<h3>Recent</h3>
+  <p>最近接手了一个针对未成年防沉迷认证的半成品 SDK，魔改了一番（接口改动、项目组织、多个业务方版本、打包），简单记录一下。</p>
+<h2 id="琐事"><a href="#琐事" class="headerlink" title="琐事"></a>琐事</h2><h4 id="Framework"><a href="#Framework" class="headerlink" title="Framework"></a>Framework</h4><p>Framework 在 Apple 定义上看就是组织资源的一种动态库。如果你把 mach-o 设置 static library，通常没啥问题，但是如果 framework 包含 bundle 资源，那么代码中通过 <code>-bundleForClass:</code> 是找不到对应的，static library 的 code 已经被 link 到 main execute，那么你只能获得 main bunlde，当然也是有 workaround：就是去资源目录里面去查找；或者要求接入方把这个 bundle 放到 main bundle（尽管是脚本做这个事情）。都不太优雅，所以通常有资源的 SDK 弄成的动态库，会比较舒服。</p>
+<p>然后对外头文件还是得用 umbrella header，这样就能用上 module  feature。</p>
+<h4 id="Inteface"><a href="#Inteface" class="headerlink" title="Inteface"></a>Inteface</h4><p>隐藏一些没必要暴露的 API，就用 extension 特性建立 PublicClass+Private.h 文件，仅供内部访问，保持对外输出到 API 是干净、无冗余的。另外有一些入参对象，如有必要尽量，让它遵循 NSCopying 协议、或者说，使用它的 immutable 副本。设想，caller 传入了一个 context 字典，SDK 内部读取上面的值 context[account] 处理业务，而 caller 在外面不小心改了这个字典内容，就会产生一些异常。</p>
+<h4 id="Packing"><a href="#Packing" class="headerlink" title="Packing"></a>Packing</h4><p>项目内的打包还是有点问题：</p>
+<ol>
+<li><p>使用 xcodebuild build 而不是 archive；</p>
+</li>
+<li><p>lipo 合并 ARM 和 Intel 两个 archs 的 framework 的时候，把 Intel framework 当作 destination 了，什么意思呢？即拷贝了 Intel simulator framework 作为最终产物，然后用 lipo 把 ARM 的二进制合并到 simulator framework 了，那么里面的 Info.plist 就充满了 simulator 的字眼（DTSDKName、DTPlatformName、CFBundleSupportedPlatforms）；</p>
+</li>
+<li><p>2021 年还在使用 Xcode 13 输出 2 slice framework 然后让接入方在打包的时候用脚本 remove Intel slice 实在有点体验不佳。</p>
+</li>
+</ol>
+<p>第一个不好说算不算问题，但是因为 build 没有产生 dsym 文件，那么给到接入方就会很不舒服；说起 archive 要提一下 -arhivePath 是相对 pwd 的路径，怪不得一开始指定一个绝对路径，每次 archive 完总是输出不了东西;😅</p>
+<p>第二个可能是通病，同一个互联网同一个 lipo 脚本？这样会导致 App 提交到审核被拒，这锅背不起，幸好隔壁部门有类似经历，咱们提前规避;</p>
+<p>第三个就是改下 lipo 为 -create-xcframework 了，<strong>不过 xcframework 的组织格式有点冗余，显然多个 framework 里的很多资源其实是相同，但是好处就在于接入方不用纠结怎么移除 Intel arch 的 slice。</strong></p>
+<h4 id="Others"><a href="#Others" class="headerlink" title="Others"></a>Others</h4><ol>
+<li>消灭所有警告 ⚠️</li>
+<li>对项目进行静态分析并解决所有 issues 🔨</li>
+<li>具备级别分类的日志工具，方便双方排查问题 📝</li>
+</ol>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Aug 16, 2021</p>
+  
 
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 16, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/08/16/sdk/" >
-      
-        输出 Framework 的一些琐事
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/26/sign/" >
-      
-        😮‍💨
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 20, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/20/scaled_API/" >
-      
-        Decompression & Downsampling Techniques
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 11, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/11/opt-for-search/" >
-      
-        线性搜索内存数据的业务优化
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 6, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/06/undefined/" >
-      
-        Relocation 中的一个 UB
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 3, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/03/sony/" >
-      
-        被灌输的集体记忆
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 28, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/28/annoying-session-10252/" >
-      
-        Don't trust  beta software
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 17, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/17/tap-lag/" >
-      
-        UIButton 响应延迟
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 8, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/08/compiling/" >
-      
-        compiling...
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 2, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/02/why-it-works-excluded-archs-arm64-md/" >
-      
-        解决 ARM Simulator 的 link 错误
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 27, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/27/cpp-excpetion-captured-2/" >
-      
-        CPPExceptionTerminate Crash（后续）
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/26/cpp-excpetion-captured/" >
-      
-        CPPExceptionTerminate Crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 19, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/19/cons_about_binary_packaging/" >
-      
-        组件二进制化初期遇到的问题
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 18, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/18/objc_attr_at_binary/" >
-      
-        基于 Mach-O 的内存管理语义分析
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 16, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/08/16/a_keyboard_crash/" >
-      
-        记一个 callstack 没有 user code 的 crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 5, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/08/05/ret_val_on_lldb_br/" >
-      
-        在 lldb 中命中函数断点后自动输出返回值
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 6, 2020</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2020/07/06/stack_bt_lua_and_c/" >
-      
-        包装下 Lua 与 C/C++ 宿主交互
-      
-    </a>
-  </div>
-</div>
-
-
-<h5> <a href="/archives">All Posts</a></h5>
 
           <div class="row mt-2">
   
