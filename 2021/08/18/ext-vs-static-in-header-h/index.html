@@ -214,7 +214,7 @@ Class8.m &#x2F;&#x2F; 引用两个常量，[kTestSymbol0 stringByAppendingString
   	 ...
  Segment __DATA_CONST: 16384
      Section __got: 8
-     Section __const: 40  	&lt;--------- 常量占据 400 字节
+     Section __const: 40  	&lt;--------- 常量占据 40 字节
  
  
 [static case]
@@ -270,18 +270,18 @@ Segment __DATA_CONST: 16384
 </ul>
 <p>不必要的拷贝具体是怎么样的呢？</p>
 <ul>
-<li> 320 字节 = 400 字节 - 每个常量空间 8 字节 * 10</li>
+<li> 320 字节 = 400 字节 - 每个常量空间 8 字节 * 10 个不必要的拷贝</li>
 </ul>
 <p>其中少拷贝的 10 个应该是：</p>
 <ol>
-<li><p>5 个 Const.m 没有对 Const.h 的 static 引用，故减少 5 个拷贝；</p>
+<li><p>5 个是 Const.m 没有对 Const.h 的 static var 的引用，故减少 5 个拷贝；</p>
 </li>
 <li><p>3 个是 Class8.m 只引用了 kTestSymbol0 和 kTestSymbol1，故减少 3 个拷贝；</p>
 </li>
-<li><p>剩余 2 个比较奇妙，其实是 kTestSymbol0 和 kTestSymbol1，下面展开说说。</p>
+<li><p>剩余 2 个比较奇妙，其实就是 kTestSymbol0 和 kTestSymbol1，下面展开说说。</p>
 </li>
 </ol>
-<p>回头看这些编译单元的功能，不同于 Class0~Class7 打印地址的操作：</p>
+<p>回头看这些编译单元的功能，Class0~Class7 打印地址：</p>
 <pre class="line-numbers language-none"><code class="language-none">printf(&quot;%p\n&quot;, &amp;kTestSymbol4);<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>所以必须在 __DATA_CONST, __const 划分一个空间，可以获取其地址。而 Class8 则直接引用字符串：</p>
