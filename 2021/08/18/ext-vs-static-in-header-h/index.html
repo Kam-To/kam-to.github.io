@@ -11,12 +11,12 @@
   <meta charset="utf-8">
 
   
-  <title>Extern vs. Static, Battle in Header</title>
+  <title>Extern/Static Const, Battle in Header</title>
   <meta name="theme-color" content="#7956b7">
   
   <link rel="canonical" href="http://example.com/2021/08/18/ext-vs-static-in-header-h/">
   
-  <meta name="description" content="几年前把项目里头，埋点事件头文件常量字符串对象的 storage-class specifier 从 static 改为 extern，当时是基于一个很朴素想法——定义在 .h 的 static variable 会在所有 import 导的 translation unit 有一份私有拷贝，改为 ">
+  <meta name="description" content="几年前把项目里，埋点事件头文件的 const NSString 对象的 storage-class specifier 从 static 改为 extern。当时是基于一个很朴素想法——定义在 .h 的 static const string 会在所有 import 导的 translation u">
   
   
   <meta name="author" content="Kam">
@@ -25,16 +25,16 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Extern vs. Static, Battle in Header" />
+  <meta property="og:title" content="Extern/Static Const, Battle in Header" />
   
-  <meta property="og:description" content="几年前把项目里头，埋点事件头文件常量字符串对象的 storage-class specifier 从 static 改为 extern，当时是基于一个很朴素想法——定义在 .h 的 static variable 会在所有 import 导的 translation unit 有一份私有拷贝，改为 ">
+  <meta property="og:description" content="几年前把项目里，埋点事件头文件的 const NSString 对象的 storage-class specifier 从 static 改为 extern。当时是基于一个很朴素想法——定义在 .h 的 static const string 会在所有 import 导的 translation u">
   
   <meta property="og:url" content="http://example.com/2021/08/18/ext-vs-static-in-header-h/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Extern vs. Static, Battle in Header">
+  <meta name="twitter:title" content="Extern/Static Const, Battle in Header">
   
-  <meta name="twitter:description" content="几年前把项目里头，埋点事件头文件常量字符串对象的 storage-class specifier 从 static 改为 extern，当时是基于一个很朴素想法——定义在 .h 的 static variable 会在所有 import 导的 translation unit 有一份私有拷贝，改为 ">
+  <meta name="twitter:description" content="几年前把项目里，埋点事件头文件的 const NSString 对象的 storage-class specifier 从 static 改为 extern。当时是基于一个很朴素想法——定义在 .h 的 static const string 会在所有 import 导的 translation u">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
@@ -180,10 +180,161 @@
 </div>
 
         <div class="trans">
-            <h2>Extern vs. Static, Battle in Header</h2>
+            <h2>Extern/Static Const, Battle in Header</h2>
 
-  <p>几年前把项目里头，埋点事件头文件常量字符串对象的 storage-class specifier 从 static 改为 extern，当时是基于一个很朴素想法——定义在 .h 的 static variable 会在所有 import 导的 translation unit 有一份私有拷贝，改为 extern 能总是引用同一个对象以节省空间。</p>
+  <p>几年前把项目里，埋点事件头文件的 const NSString 对象的 storage-class specifier 从 static 改为 extern。当时是基于一个很朴素想法——定义在 .h 的 static const string 会在所有 import 导的 translation unit 中有一份私有拷贝，改为 extern 能总是引用同一个对象以节省空间。然而事情没有那么简单。</p>
+<h2 id="🧪-实验"><a href="#🧪-实验" class="headerlink" title="🧪 实验"></a>🧪 实验</h2><p>新建一个 command line 工程，文件和作用如下：</p>
+<pre class="line-numbers language-none"><code class="language-none">main.m
 
+Const.h &#x2F;&#x2F; 「声明 extern 」或「定义 static」 5 个字符串常量
+Const.m &#x2F;&#x2F; 当 .h 为「声明 extern 」时，.m 定义对应的常量
+
+Class0.h
+Class0.m &#x2F;&#x2F; 导入 Const.h，打印全部 5 个常量地址，如 printf(&quot;%p\n&quot;, &amp;kTestSymbol4);
+...
+Class7.m &#x2F;&#x2F; Class0~Class7 相同
+
+Class8.h
+Class8.m &#x2F;&#x2F; 引用两个常量，[kTestSymbol0 stringByAppendingString:kTestSymbol1];<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>static 和 extern 带来的区别，主要在常量数据段以及引用的代码段，需要探索的内容为两点：</p>
+<ol>
+<li>static const string var 是否在 __DATA_CONST, __const 占据空间；</li>
+<li>static 和 extern 引用处的代码体积如何；</li>
+</ol>
+<p>针对上述两个内容的验证方法：</p>
+<ol>
+<li>检查 __DATA_CONST, __const 的体积；</li>
+<li>查看反汇编；</li>
+</ol>
+<h3 id="LTO-NO-O0"><a href="#LTO-NO-O0" class="headerlink" title="LTO=NO, -O0"></a>LTO=NO, -O0</h3><p>没有任何优化的情况下，编译并查看产物体积：</p>
+<pre class="line-numbers language-none"><code class="language-none">[extern case]
+ Segment __TEXT: 16384
+     Section __text: 1628  	&lt;--------- 指令更多
+  	 ...
+ Segment __DATA_CONST: 16384
+     Section __got: 8
+     Section __const: 40  	&lt;--------- 常量占据 400 字节
+ 
+ 
+[static case]
+ Segment __TEXT: 16384
+     Section __text: 1620 	&lt;--------- 指令更少
+		 ...
+ Segment __DATA_CONST: 16384
+     Section __got: 8
+     Section __const: 400 	&lt;--------- 常量占据 400 字节<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>上面的数据基本符合「朴素的想法」：</p>
+<ul>
+<li>40 字节 = 每个常量空间 8 字节 *  5 常量 * 1 个定义所在编译单元</li>
+<li>400 字节 = 每个常量空间 8 字节 *  5 常量 * 10 个导入头文佳的编译单元</li>
+</ul>
+<p>其中引用代码的机器码如下，看起来 extern 会多一些指令：</p>
+<pre class="line-numbers language-none"><code class="language-none">[extern case]
+ 0x100003848 &lt;+12&gt;:  adrp   x8, 1
+ 0x10000384c &lt;+16&gt;:  add    x8, x8, #0x8       ;x8 地址为 0x100004028
+ 0x100003850 &lt;+20&gt;:  ldr    x0, [x8]           ;x8 地址内容为 0x0000000100004030, 即 @&quot;kTestSymbol0&quot; 对象
+ 
+ 
+[static case]
+ 0x100003858 &lt;+20&gt;:  adrp   x0, 1
+ 0x10000385c &lt;+24&gt;:  add    x0, x0, #0x198      ; x0 &#x3D; 0x0000000100004198, @&quot;kTestSymbol0&quot;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+
+<h3 id="LTO-NO-Os"><a href="#LTO-NO-Os" class="headerlink" title="LTO=NO, -Os"></a>LTO=NO, -Os</h3><p>打开打包常用的 -Os 优化，编译并查看产物体积：</p>
+<pre class="line-numbers language-none"><code class="language-none">[extern case]
+Segment __TEXT: 16384
+   Section __text: 1404  	&lt;--------- 指令更多
+	 ...
+Segment __DATA_CONST: 16384
+   Section __got: 8
+   Section __const: 40  	&lt;--------- 常量占据 400 字节
+   Section __cfstring: 160
+
+
+[static case]
+Segment __TEXT: 16384
+   Section __text: 1396 	&lt;--------- 指令更少
+   ...
+Segment __DATA_CONST: 16384
+   Section __got: 8
+   Section __const: 320 	&lt;--------- 常量占据 320 字节
+   Section __cfstring: 160<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>上面的数据说明：</p>
+<ul>
+<li>优化后 extern case 的引用代码依然更多；</li>
+<li>优化后 static const 占据的常量空间更小，推测剔除了不必要的拷贝；</li>
+</ul>
+<p>不必要的拷贝具体是怎么样的呢？</p>
+<ul>
+<li> 320 字节 = 400 字节 - 每个常量空间 8 字节 * 10</li>
+</ul>
+<p>其中少拷贝的 10 个应该是：</p>
+<ol>
+<li><p>5 个 Const.m 没有对 Const.h 的 static 引用，故减少 5 个拷贝；</p>
+</li>
+<li><p>3 个是 Class8.m 只引用了 kTestSymbol0 和 kTestSymbol1，故减少 3 个拷贝；</p>
+</li>
+<li><p>剩余 2 个比较奇妙，其实是 kTestSymbol0 和 kTestSymbol1，下面展开说说。</p>
+</li>
+</ol>
+<p>回头看这些编译单元的功能，不同于 Class0~Class7 打印地址的操作：</p>
+<pre class="line-numbers language-none"><code class="language-none">printf(&quot;%p\n&quot;, &amp;kTestSymbol4);<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>所以必须在 __DATA_CONST, __const 划分一个空间，可以获取其地址。而 Class8 则直接引用字符串：</p>
+<pre class="line-numbers language-none"><code class="language-none">[kTestSymbol0 stringByAppendingString:kTestSymbol1];<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>这样的代码，被优化成了直接读取字符串对象地址，所以 kTestSymbol0 和 kTestSymbol1 也不需要拷贝了。</p>
+<p>另外，其中引用代码的机器码如下，看起来 extern 也还是会多一些指令：</p>
+<pre class="line-numbers language-none"><code class="language-none">[extern case]
+     0x100003918 &lt;+12&gt;: nop
+     0x10000391c &lt;+16&gt;: nop
+     0x100003920 &lt;+20&gt;: ldr    x0, #0x6e8               ; @&quot;kTestSymbol0&quot;
+ -&gt;  0x100003924 &lt;+24&gt;: nop
+     0x100003928 &lt;+28&gt;: nop
+     0x10000392c &lt;+32&gt;: ldr    x2, #0x6e4
+     0x100003930 &lt;+36&gt;: nop
+[static case]
+ -&gt;  0x100003920 &lt;+12&gt;: nop
+     0x100003924 &lt;+16&gt;: ldr    x1, #0x4c2c               ; &quot;stringByAppendingString:&quot;
+     0x100003928 &lt;+20&gt;: adr    x0, #0x818                ; @&quot;kTestSymbol0&quot;
+     0x10000392c &lt;+24&gt;: nop <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+
+<h3 id="LTO-YES-THIN-Os"><a href="#LTO-YES-THIN-Os" class="headerlink" title="LTO=YES_THIN, -Os"></a>LTO=YES_THIN, -Os</h3><p>为什么前面实验回强调 LTO 设置呢，因为当 LTO 为 Incremental 时：</p>
+<pre class="line-numbers language-none"><code class="language-none">[extern case]
+ -&gt;  0x100003928 &lt;+12&gt;: nop
+     0x10000392c &lt;+16&gt;: ldr    x0, #0x6dc
+     0x100003930 &lt;+20&gt;: nop
+     0x100003934 &lt;+24&gt;: ldr    x2, #0x6dc
+     0x100003938 &lt;+28&gt;: nop
+     0x10000393c &lt;+32&gt;: ldr    x1, #0x4c14               ; &quot;stringByAppendingString:&quot;
+     0x100003940 &lt;+36&gt;: bl     0x100003d88               ; symbol stub for: objc_msgSend
+ 
+[static case]
+ -&gt;  0x100003928 &lt;+12&gt;: nop
+     0x10000392c &lt;+16&gt;: ldr    x1, #0x4c24               ; &quot;stringByAppendingString:&quot;
+     0x100003930 &lt;+20&gt;: adr    x0, #0x818                ; @&quot;kTestSymbol0&quot;
+     0x100003934 &lt;+24&gt;: nop
+     0x100003938 &lt;+28&gt;: adr    x2, #0x830                ; @&quot;kTestSymbol1&quot;
+     0x10000393c &lt;+32&gt;: nop
+     0x100003940 &lt;+36&gt;: bl     0x100003d88               ; symbol stub for: objc_msgSend<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>它们的机器码长度一致了。<strong>当然，这个结论只在这个函数实现中有效。</strong></p>
+<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>针对 <code>NSString *const</code> 常量，可以得到的结论有：</p>
+<ol>
+<li>extern case 保持固定常量的存在，只占用一份变量空间（实验中 __DATA_CONST, __const 保持在 40）；</li>
+<li>不开启任何编译优化的情况下，所有的 static const var 在每个单元都会有一份 copy；</li>
+<li>开启 -Os 级别的编译优化的情况下，是否拷贝 static const var 根据代码中是否取 const var 地址而定；</li>
+<li>static case 中，不拷贝的情况下引用代码直接读取 __DATA_CONST,__cfstring 的地址；拷贝的情况下，拷贝数量根据引用的量决定；</li>
+<li>-O0/-Os 的编译条件下，extern case 的引用生成的机器码中会多一些 nop 指令导致体积变大；</li>
+<li>LTO=YES_THIN 可能抹平机器码体积上的差距。</li>
+</ol>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
   <p> — Aug 18, 2021</p>
   
 
