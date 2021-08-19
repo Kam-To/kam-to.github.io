@@ -250,7 +250,7 @@ Segment __TEXT: 16384
 	 ...
 Segment __DATA_CONST: 16384
    Section __got: 8
-   Section __const: 40  	&lt;--------- 常量占据 400 字节
+   Section __const: 40  	&lt;--------- 常量占据 40 字节
    Section __cfstring: 160
 
 
@@ -327,12 +327,18 @@ Segment __DATA_CONST: 16384
 <p>它们的机器码长度一致了。<strong>当然，这个结论只在这个函数实现中有效。</strong></p>
 <h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>针对 <code>NSString *const</code> 常量，可以得到的结论有：</p>
 <ol>
-<li>extern case 保持固定常量的存在，只占用一份变量空间（实验中 __DATA_CONST, __const 保持在 40）；</li>
-<li>不开启任何编译优化的情况下，所有的 static const var 在每个单元都会有一份 copy；</li>
-<li>开启 -Os 级别的编译优化的情况下，是否拷贝 static const var 根据代码中是否取 const var 地址而定；</li>
-<li>static case 中，不拷贝的情况下引用代码直接读取 __DATA_CONST,__cfstring 的地址；拷贝的情况下，拷贝数量根据引用的量决定；</li>
-<li>-O0/-Os 的编译条件下，extern case 的引用生成的机器码中会多一些 nop 指令导致体积变大；</li>
-<li>LTO=YES_THIN 可能抹平机器码体积上的差距。</li>
+<li><p>extern case 保持固定常量的存在，只占用一份变量空间（实验中 __DATA_CONST, __const 保持在 40）；</p>
+</li>
+<li><p>不开启任何编译优化的情况下，所有的 static const var 在每个单元都会有一份 copy；</p>
+</li>
+<li><p>开启 -Os 级别的编译优化的情况下，是否拷贝 static const var 根据代码中是否取 const var 地址而定；</p>
+</li>
+<li><p>static case 中，不拷贝的情况下引用代码直接读取 __DATA_CONST,__cfstring 的地址；拷贝的情况下，拷贝数量根据引用的量决定；</p>
+</li>
+<li><p>-O0/-Os 的编译条件下，extern case 的引用生成的机器码中会多一些 nop 指令导致体积变大；</p>
+</li>
+<li><p>LTO=YES_THIN 可能抹平机器码体积上的差距。</p>
+</li>
 </ol>
 <h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
   <p> — Aug 18, 2021</p>
