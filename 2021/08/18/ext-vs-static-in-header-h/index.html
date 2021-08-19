@@ -207,7 +207,8 @@ Class8.m &#x2F;&#x2F; 引用两个常量，[kTestSymbol0 stringByAppendingString
 <li>检查 __DATA_CONST, __const 的体积；</li>
 <li>查看反汇编；</li>
 </ol>
-<h3 id="LTO-NO-O0"><a href="#LTO-NO-O0" class="headerlink" title="LTO=NO, -O0"></a>LTO=NO, -O0</h3><p>没有任何优化的情况下，编译并查看产物体积：</p>
+<p><strong>LTO=NO, -O0</strong></p>
+<p>没有任何优化的情况下，编译并查看产物体积：</p>
 <pre class="line-numbers language-none"><code class="language-none">[extern case]
  Segment __TEXT: 16384
      Section __text: 1628  	&lt;--------- 指令更多
@@ -241,9 +242,8 @@ Class8.m &#x2F;&#x2F; 引用两个常量，[kTestSymbol0 stringByAppendingString
  0x100003858 &lt;+20&gt;:  adrp   x0, 1
  0x10000385c &lt;+24&gt;:  add    x0, x0, #0x198      ; x0 &#x3D; 0x0000000100004198, @&quot;kTestSymbol0&quot;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
-
-
-<h3 id="LTO-NO-Os"><a href="#LTO-NO-Os" class="headerlink" title="LTO=NO, -Os"></a>LTO=NO, -Os</h3><p>打开打包常用的 -Os 优化，编译并查看产物体积：</p>
+<p><strong>LTO=NO, -Os</strong></p>
+<p>打开打包常用的 -Os 优化，编译并查看产物体积：</p>
 <pre class="line-numbers language-none"><code class="language-none">[extern case]
 Segment __TEXT: 16384
    Section __text: 1404  	&lt;--------- 指令更多
@@ -282,10 +282,10 @@ Segment __DATA_CONST: 16384
 </li>
 </ol>
 <p>回头看这些编译单元的功能，Class0~Class7 打印地址：</p>
-<pre class="line-numbers language-none"><code class="language-none">printf(&quot;%p\n&quot;, &amp;kTestSymbol4);<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%p\n"</span><span class="token punctuation">,</span> <span class="token operator">&amp;</span>kTestSymbol4<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>所以必须在 __DATA_CONST, __const 划分一个空间，可以获取其地址。而 Class8 则直接引用字符串：</p>
-<pre class="line-numbers language-none"><code class="language-none">[kTestSymbol0 stringByAppendingString:kTestSymbol1];<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<pre class="line-numbers language-objc" data-language="objc"><code class="language-objc">[kTestSymbol0 stringByAppendingString:kTestSymbol1];<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>这样的代码，被优化成了直接读取字符串对象地址，所以 kTestSymbol0 和 kTestSymbol1 也不需要拷贝了。</p>
 <p>另外，其中引用代码的机器码如下，看起来 extern 也还是会多一些指令：</p>
@@ -303,9 +303,8 @@ Segment __DATA_CONST: 16384
      0x100003928 &lt;+20&gt;: adr    x0, #0x818                ; @&quot;kTestSymbol0&quot;
      0x10000392c &lt;+24&gt;: nop <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
-
-
-<h3 id="LTO-YES-THIN-Os"><a href="#LTO-YES-THIN-Os" class="headerlink" title="LTO=YES_THIN, -Os"></a>LTO=YES_THIN, -Os</h3><p>为什么前面实验回强调 LTO 设置呢，因为当 LTO 为 Incremental 时：</p>
+<p><strong>LTO=YES_THIN, -Os</strong></p>
+<p>为什么前面实验回强调 LTO 设置呢，因为当 LTO 为 Incremental 时：</p>
 <pre class="line-numbers language-none"><code class="language-none">[extern case]
  -&gt;  0x100003928 &lt;+12&gt;: nop
      0x10000392c &lt;+16&gt;: ldr    x0, #0x6dc
