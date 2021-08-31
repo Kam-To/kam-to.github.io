@@ -16,7 +16,7 @@
   
   <link rel="canonical" href="http://example.com/2021/08/26/framework-UI-tip/">
   
-  <meta name="description" content="先前输出 Framework 的记录文章里面漏了一点，就是 UI 在各设备/方向上的适应性。测试 demo 一直勾选 Requires full screen 的选项，导致一直未能发现在 iPad 上存在分屏/旋转的异常情况。 ISSUESSDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸识别的 ">
+  <meta name="description" content="先前输出 Framework 的记录文章里面漏了一点，就是 UI 在各设备/方向上的适应性。测试 demo 一直勾选 Requires full screen 的选项，导致一直未能发现在 iPad 上存在分屏/旋转的异常情况。 ISSUES0x01SDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸">
   
   
   <meta name="author" content="Kam">
@@ -27,14 +27,14 @@
   <meta property="og:type" content="article" />
   <meta property="og:title" content="输出 Framework 还需提高 UI 适应性" />
   
-  <meta property="og:description" content="先前输出 Framework 的记录文章里面漏了一点，就是 UI 在各设备/方向上的适应性。测试 demo 一直勾选 Requires full screen 的选项，导致一直未能发现在 iPad 上存在分屏/旋转的异常情况。 ISSUESSDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸识别的 ">
+  <meta property="og:description" content="先前输出 Framework 的记录文章里面漏了一点，就是 UI 在各设备/方向上的适应性。测试 demo 一直勾选 Requires full screen 的选项，导致一直未能发现在 iPad 上存在分屏/旋转的异常情况。 ISSUES0x01SDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸">
   
   <meta property="og:url" content="http://example.com/2021/08/26/framework-UI-tip/" />
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="输出 Framework 还需提高 UI 适应性">
   
-  <meta name="twitter:description" content="先前输出 Framework 的记录文章里面漏了一点，就是 UI 在各设备/方向上的适应性。测试 demo 一直勾选 Requires full screen 的选项，导致一直未能发现在 iPad 上存在分屏/旋转的异常情况。 ISSUESSDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸识别的 ">
+  <meta name="twitter:description" content="先前输出 Framework 的记录文章里面漏了一点，就是 UI 在各设备/方向上的适应性。测试 demo 一直勾选 Requires full screen 的选项，导致一直未能发现在 iPad 上存在分屏/旋转的异常情况。 ISSUES0x01SDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
@@ -183,7 +183,7 @@
             <h2>输出 Framework 还需提高 UI 适应性</h2>
 
   <p>先前输出 Framework 的记录文章里面漏了一点，就是 UI 在各设备/方向上的适应性。测试 demo 一直勾选 Requires full screen 的选项，导致一直未能发现在 iPad 上存在分屏/旋转的异常情况。</p>
-<h2 id="ISSUES"><a href="#ISSUES" class="headerlink" title="ISSUES"></a>ISSUES</h2><p>SDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸识别的 UI 还是竖屏比较自然。所以在很多页面上关闭了自动旋转并指定了支持的方向：</p>
+<h2 id="ISSUES"><a href="#ISSUES" class="headerlink" title="ISSUES"></a>ISSUES</h2><h3 id="0x01"><a href="#0x01" class="headerlink" title="0x01"></a>0x01</h3><p>SDK 接手过来就是限定要在竖屏页面使用的，毕竟人脸识别的 UI 还是竖屏比较自然。所以在很多页面上关闭了自动旋转并指定了支持的方向：</p>
 <pre class="line-numbers language-objc" data-language="objc"><code class="language-objc">- (BOOL)shouldAutorotate &#123;
     return NO;
 &#125;
@@ -193,6 +193,12 @@
 &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
 <p>然而这在 App 支持在 iPad 上分屏的情况下没有任何限制能力。</p>
+<h3 id="0x02"><a href="#0x02" class="headerlink" title="0x02"></a>0x02</h3><p>接入方的 AppDelegate 如果返回只 support landscape，上面的代码也有麻烦：</p>
+<pre class="line-numbers language-objc" data-language="objc"><code class="language-objc">- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window &#123;
+	return UIInterfaceOrientationMaskLandscape;
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>这种情况下，<code>UIAlertController</code> 的 <code>-shouldAutorotate</code> 返回 YES，会出现由于两个支持的方向没有交集而崩溃。这种情况最好能让接入方兼容一下，读取 SDK 的标记，返回 SDK 需要的方向。而这次显然不行，因为接入方说这个是引擎的代码，游戏接入升级引擎的成本较大。只能自己去 hook 宿主的 <code>application:supportedInterfaceOrientationsForWindow:</code> 方法。</p>
 <p><strong>🚩准备整理一个 UI 编写指南。</strong></p>
 <h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
   <p> — Aug 26, 2021</p>
