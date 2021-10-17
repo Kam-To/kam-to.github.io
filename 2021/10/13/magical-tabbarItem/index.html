@@ -11,12 +11,12 @@
   <meta charset="utf-8">
 
   
-  <title>KAM</title>
+  <title>UINavigationController 的 tabBarItem 属性</title>
   <meta name="theme-color" content="#7956b7">
   
-  <link rel="canonical" href="http://example.com/page/3/">
+  <link rel="canonical" href="http://example.com/2021/10/13/magical-tabbarItem/">
   
-  <meta name="description" content="">
+  <meta name="description" content="事情是这样的，我把项目所有的属性和方法（尽可能地）改成了 objc_direct 修饰来减少包体。然后 App 启动之后就 crash 了。 UINavigationController 的 tabBarItem问题出在启动后原本 work 的自定义 tabbar 代码，通过 UINavigatio">
   
   
   <meta name="author" content="Kam">
@@ -25,21 +25,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="KAM" />
+  <meta property="og:title" content="UINavigationController 的 tabBarItem 属性" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="事情是这样的，我把项目所有的属性和方法（尽可能地）改成了 objc_direct 修饰来减少包体。然后 App 启动之后就 crash 了。 UINavigationController 的 tabBarItem问题出在启动后原本 work 的自定义 tabbar 代码，通过 UINavigatio">
   
-  <meta property="og:url" content="http://example.com/page/3/" />
+  <meta property="og:url" content="http://example.com/2021/10/13/magical-tabbarItem/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KAM">
+  <meta name="twitter:title" content="UINavigationController 的 tabBarItem 属性">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="事情是这样的，我把项目所有的属性和方法（尽可能地）改成了 objc_direct 修饰来减少包体。然后 App 启动之后就 crash 了。 UINavigationController 的 tabBarItem问题出在启动后原本 work 的自定义 tabbar 代码，通过 UINavigatio">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/page/3/" />
+  <meta name="twitter:url" content="http://example.com/2021/10/13/magical-tabbarItem/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -180,261 +180,15 @@
 </div>
 
         <div class="trans">
-          <div class="row">
-  <!-- <div class="column", > -->
-    <!-- Main information, edit it on theme/_config.yml -->
-    <!-- <h2 class="mb-2"></h2> -->
-    <!-- <p></p> -->
-    <!-- <p></p> -->
-    💼&nbsp;&nbsp;Senior Engineer@NetEase<br><br> 
-    🚗&nbsp;&nbsp;Mini(1:64) Diecast Cars Collector<br><br> 
-    🎵&nbsp;&nbsp;Now listening... Led Zeppelin, Beatles<br><br> 
-  <!-- </div> -->
-</div>
+            <h2>UINavigationController 的 tabBarItem 属性</h2>
 
-<h3>Recent</h3>
+  <p>事情是这样的，我把项目所有的属性和方法（尽可能地）改成了 objc_direct 修饰来减少包体。然后 App 启动之后就 crash 了。</p>
+<h2 id="UINavigationController-的-tabBarItem"><a href="#UINavigationController-的-tabBarItem" class="headerlink" title="UINavigationController 的 tabBarItem"></a>UINavigationController 的 tabBarItem</h2><p>问题出在启动后原本 work 的自定义 tabbar 代码，通过 UINavigationController 获取的 tabBarItem 变成了系统类而非自定义类，导致 unrecognized selector 错误。</p>
+<p>排查发现 -[UINavigationController tabBarItem] 会 lazy initialize 一个 UITabBarItem 对象，然后去获取其 root view controller 的 tabBarItem，如果后者的 image/selectedImage 属性，就会返回前者。这是个 undocumented 都行为额。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Oct 13, 2021</p>
+  
 
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Oct 13, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/10/13/magical-tabbarItem/" >
-      
-        UINavigationController 的 tabBarItem 属性
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/08/26/framework-UI-tip/" >
-      
-        输出 Framework 还需提高 UI 适应性
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 18, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/08/18/ext-vs-static-in-header-h/" >
-      
-        Extern/Static Const, Battle in Header
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 16, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/08/16/sdk/" >
-      
-        输出 Framework 的一些琐事
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/26/sign/" >
-      
-        😮‍💨
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 20, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/20/scaled_API/" >
-      
-        Decompression & Downsampling Techniques
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 11, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/11/opt-for-search/" >
-      
-        线性搜索内存数据的业务优化
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 6, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/06/undefined/" >
-      
-        Relocation 中的一个 UB
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 3, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/03/sony/" >
-      
-        被灌输的集体记忆
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 28, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/28/annoying-session-10252/" >
-      
-        Don't trust  beta software
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 17, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/17/tap-lag/" >
-      
-        UIButton 响应延迟
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 8, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/08/compiling/" >
-      
-        compiling...
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 2, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/02/why-it-works-excluded-archs-arm64-md/" >
-      
-        解决 ARM Simulator 的 link 错误
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 27, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/27/cpp-excpetion-captured-2/" >
-      
-        CPPExceptionTerminate Crash（后续）
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/26/cpp-excpetion-captured/" >
-      
-        CPPExceptionTerminate Crash
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 19, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/19/cons_about_binary_packaging/" >
-      
-        组件二进制化初期遇到的问题
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 18, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/18/objc_attr_at_binary/" >
-      
-        基于 Mach-O 的内存管理语义分析
-      
-    </a>
-  </div>
-</div>
-
-
-<h5> <a href="/archives">All Posts</a></h5>
 
           <div class="row mt-2">
   
