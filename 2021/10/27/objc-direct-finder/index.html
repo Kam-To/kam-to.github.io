@@ -11,12 +11,12 @@
   <meta charset="utf-8">
 
   
-  <title>All Posts - Kam</title>
+  <title>寻找 directable method/property</title>
   <meta name="theme-color" content="#7956b7">
   
-  <link rel="canonical" href="http://example.com/archives/">
+  <link rel="canonical" href="http://example.com/2021/10/27/objc-direct-finder/">
   
-  <meta name="description" content="">
+  <meta name="description" content="先前提到有在做一个 clang plugin 用来寻找可 direct call 的 property 和 method，整理了下搁 Github 上了～ Implementation这个插件的实现思路其实非常简单，就是通过访问 AST 的结点的过程中，遇到的每个方法声明/实现都通过一定的规则判断是">
   
   
   <meta name="author" content="Kam">
@@ -25,21 +25,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="All Posts - Kam" />
+  <meta property="og:title" content="寻找 directable method/property" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="先前提到有在做一个 clang plugin 用来寻找可 direct call 的 property 和 method，整理了下搁 Github 上了～ Implementation这个插件的实现思路其实非常简单，就是通过访问 AST 的结点的过程中，遇到的每个方法声明/实现都通过一定的规则判断是">
   
-  <meta property="og:url" content="http://example.com/archives/" />
+  <meta property="og:url" content="http://example.com/2021/10/27/objc-direct-finder/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="All Posts - Kam">
+  <meta name="twitter:title" content="寻找 directable method/property">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="先前提到有在做一个 clang plugin 用来寻找可 direct call 的 property 和 method，整理了下搁 Github 上了～ Implementation这个插件的实现思路其实非常简单，就是通过访问 AST 的结点的过程中，遇到的每个方法声明/实现都通过一定的规则判断是">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/archives/" />
+  <meta name="twitter:url" content="http://example.com/2021/10/27/objc-direct-finder/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -180,186 +180,36 @@
 </div>
 
         <div class="trans">
-          
-<h2>All Posts</h2>
+            <h2>寻找 directable method/property</h2>
 
+  <p>先前提到有在做一个 clang plugin 用来寻找可 direct call 的 property 和 method，整理了下搁 <a target="_blank" rel="noopener" href="https://github.com/Kam-To/ObjCDirectFinder">Github</a> 上了～</p>
+<h2 id="Implementation"><a href="#Implementation" class="headerlink" title="Implementation"></a>Implementation</h2><p>这个插件的实现思路其实非常简单，就是通过访问 AST 的结点的过程中，遇到的每个方法声明/实现都通过一定的规则判断是否可以正确地被改造为 direct call，根据结果决定将方法投递到白名单或黑名单（PC alert），白名单需要改造，黑名单禁止改造。</p>
+<p>什么是正确地改造呢？首先我们必须认识到，并不是所有的方法都可以添加 objc_direct attribute 的，如果这么做了至少会导致：</p>
+<ol>
+<li>@selector(meth) 报错；</li>
+<li>Subclassing override 报错；</li>
+<li>Protocol  method 报错/失效；</li>
+<li>…</li>
+</ol>
+<p>为了解决这些异常，要做到：</p>
+<ol>
+<li>将所有的 protocol selector、@selector(meth) expression 中的 selector 拉黑，虽然会「误伤」到某些类中的同名方法，但相对来说安全一些，能避免许多 runtime error；</li>
+<li>消息接受者是 <code>super</code> 或者是 <code>id</code> 的情况，前者拉黑名字、后者拉黑 selector；</li>
+<li>当遇到一个方法的时候，在其类的继承链上查找是否有同名方法，有则拉黑，或者不加入白名单。</li>
+</ol>
+<h2 id="RuntimeError"><a href="#RuntimeError" class="headerlink" title="RuntimeError"></a>RuntimeError</h2><p>Github 上没提供 modify script，但是这里还是有必要提一下遇到的运行时异常：</p>
+<ol>
+<li>多主题框架中的资源、颜色对象都是运行时通过属性列表初始化的，那些类在属性 direct 后无法正常初始化；</li>
+<li>JSSDK 以及部分地方使用了字符串运行时拼接 selector，这些调用 plugin 是分析不到的。</li>
+</ol>
+<h2 id="Others"><a href="#Others" class="headerlink" title="Others"></a>Others</h2><p>贴一些开发、使用的过程中用到的命令方便自己查阅：</p>
+<pre class="line-numbers language-none"><code class="language-none">cmake ..&#x2F;llvm-project&#x2F;llvm -G Xcode -DCMAKE_OSX_ARCHITECTURES&#x3D;&#39;arm64&#39; -DCMAKE_C_COMPILER&#x3D;&#96;which clang&#96; -DCMAKE_CXX_COMPILER&#x3D;&#96;which clang++&#96; -DCMAKE_BUILD_TYPE&#x3D;Debug -DLLVM_TARGETS_TO_BUILD&#x3D;&#39;AArch64&#39; -DLLVM_ENABLE_PROJECTS&#x3D;&#39;clang&#39; -DLLVM_DEFAULT_TARGET_TRIPLE&#x3D;&#39;arm64-apple-darwin21.0.0&#39;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
-    <article>
-      <div class="row">
+<pre class="line-numbers language-none"><code class="language-none">-Xclang -load -Xclang &quot;&#x2F;Users&#x2F;kam&#x2F;Desktop&#x2F;llvm&#x2F;build&#x2F;Release&#x2F;lib&#x2F;ObjCDirectFinder.dylib&quot; -Xclang -add-plugin -Xclang directable-finder<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
-        <div class="three columns left lit">
-          <p class="bottom">Oct 27, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/10/27/objc-direct-finder/" class="">
-            
-              寻找 directable method/property
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Oct 13, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/10/13/magical-tabbarItem/" class="">
-            
-              UINavigationController 的 tabBarItem 属性
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Aug 26, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/08/26/framework-UI-tip/" class="">
-            
-              输出 Framework 还需提高 UI 适应性
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Aug 18, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/08/18/ext-vs-static-in-header-h/" class="">
-            
-              Extern/Static Const, Battle in Header
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Aug 16, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/08/16/sdk/" class="">
-            
-              输出 Framework 的一些琐事
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jul 26, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/07/26/sign/" class="">
-            
-              😮‍💨
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jul 20, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/07/20/scaled_API/" class="">
-            
-              Decompression & Downsampling Techniques
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jul 11, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/07/11/opt-for-search/" class="">
-            
-              线性搜索内存数据的业务优化
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jul 6, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/07/06/undefined/" class="">
-            
-              Relocation 中的一个 UB
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article>
-      <div class="row">
-
-        <div class="three columns left lit">
-          <p class="bottom">Jul 3, 2021</p>
-        </div>
-        <div class="nine columns left mb-3">
-          <a href="/2021/07/03/sony/" class="">
-            
-              被灌输的集体记忆
-            
-          </a>
-        </div>
-      </div>
-    </article>
-
-<div class="pagination-bar">
-  <ul class="pagination">
-    
-    
-
-    <a class="" href="/archives/page/2/">
-      <span>Older</span>
-      <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-        <path fill-rule="evenodd" d="M4 8a.5.5 0 0 0 .5.5h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5A.5.5 0 0 0 4 8z" />
-      </svg>
-    </a>
-
-    
-  </ul>
-</div>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Oct 27, 2021</p>
+  
 
 
           <div class="row mt-2">
