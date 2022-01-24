@@ -11,12 +11,12 @@
   <meta charset="utf-8">
 
   
-  <title>KAM</title>
+  <title>Multicasting Delegate 的问题</title>
   <meta name="theme-color" content="#7956b7">
   
-  <link rel="canonical" href="http://example.com/">
+  <link rel="canonical" href="http://example.com/2022/01/21/discuzz-of-multicasting/">
   
-  <meta name="description" content="">
+  <meta name="description" content="或者不是问题。 Multicast Delegate在日常的开发中，经常会使用 delegate 模式回调，有时候一个 delegate property 不够用了，就会用上 multicasting delegate，通过 forward invocation 让 observer 接收到回调。这">
   
   
   <meta name="author" content="Kam">
@@ -25,21 +25,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="KAM" />
+  <meta property="og:title" content="Multicasting Delegate 的问题" />
   
-  <meta property="og:description" content="">
+  <meta property="og:description" content="或者不是问题。 Multicast Delegate在日常的开发中，经常会使用 delegate 模式回调，有时候一个 delegate property 不够用了，就会用上 multicasting delegate，通过 forward invocation 让 observer 接收到回调。这">
   
-  <meta property="og:url" content="http://example.com/" />
+  <meta property="og:url" content="http://example.com/2022/01/21/discuzz-of-multicasting/" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KAM">
+  <meta name="twitter:title" content="Multicasting Delegate 的问题">
   
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="或者不是问题。 Multicast Delegate在日常的开发中，经常会使用 delegate 模式回调，有时候一个 delegate property 不够用了，就会用上 multicasting delegate，通过 forward invocation 让 observer 接收到回调。这">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/" />
+  <meta name="twitter:url" content="http://example.com/2022/01/21/discuzz-of-multicasting/" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -180,261 +180,20 @@
 </div>
 
         <div class="trans">
-          <div class="row">
-  <!-- <div class="column", > -->
-    <!-- Main information, edit it on theme/_config.yml -->
-    <!-- <h2 class="mb-2"></h2> -->
-    <!-- <p></p> -->
-    <!-- <p></p> -->
-    💼&nbsp;&nbsp;Senior Engineer@NetEase<br><br> 
-    🚗&nbsp;&nbsp;Mini(1:64) Diecast Cars Collector<br><br> 
-    🍵&nbsp;&nbsp;No Coffee. Black Tea Plz.<br><br> 
-  <!-- </div> -->
-</div>
+            <h2>Multicasting Delegate 的问题</h2>
 
-<h3>Recent</h3>
+  <p>或者不是问题。</p>
+<h2 id="Multicast-Delegate"><a href="#Multicast-Delegate" class="headerlink" title="Multicast Delegate"></a>Multicast Delegate</h2><p>在日常的开发中，经常会使用 delegate 模式回调，有时候一个 delegate property 不够用了，就会用上 multicasting delegate，通过 forward invocation 让 observer 接收到回调。这通常工作得很好，直到模块间的配合出现了问题。</p>
+<p>A 业务 B 业务两个模块，都监听登陆模块的登陆事件，A 在接受到 onLogin 事件后会从 B 模块读取数据，然后 A 却：</p>
+<pre><code>1. 不知道 B 模块数据需要在 onLogin 才能获取；
+2. 知道 B 模块到数据在 onLogin 才存在但不知道 A 和 B 谁先接收 onLogin 回调。
+</code></pre>
+<p>所以编程的时候需要注意。</p>
+<p>好吧其实更像是 B 模块的接口设计问题，如果是异步接口，A 模块就没这些个烦恼。</p>
+<h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
+  <p> — Jan 21, 2022</p>
+  
 
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jan 21, 2022</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2022/01/21/discuzz-of-multicasting/" >
-      
-        Multicasting Delegate 的问题
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Dec 14, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/12/14/cyberpunk2077/" >
-      
-        CyberPunk 2077 🤖️
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Oct 27, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/10/27/objc-direct-finder/" >
-      
-        寻找 directable method/property
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Oct 13, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/10/13/magical-tabbarItem/" >
-      
-        UINavigationController 的 tabBarItem 属性
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/08/26/framework-UI-tip/" >
-      
-        输出 Framework 还需提高 UI 适应性
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 18, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/08/18/ext-vs-static-in-header-h/" >
-      
-        Extern/Static Const, Battle in Header
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Aug 16, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/08/16/sdk/" >
-      
-        输出 Framework 的一些琐事
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 26, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/26/sign/" >
-      
-        😮‍💨
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 20, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/20/scaled_API/" >
-      
-        Decompression & Downsampling Techniques
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 11, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/11/opt-for-search/" >
-      
-        线性搜索内存数据的业务优化
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 6, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/06/undefined/" >
-      
-        Relocation 中的一个 UB
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jul 3, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/07/03/sony/" >
-      
-        被灌输的集体记忆
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 28, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/28/annoying-session-10252/" >
-      
-        Don't trust  beta software
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 17, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/17/tap-lag/" >
-      
-        UIButton 响应延迟
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 8, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/08/compiling/" >
-      
-        compiling...
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">Jun 2, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/06/02/why-it-works-excluded-archs-arm64-md/" >
-      
-        解决 ARM Simulator 的 link 错误
-      
-    </a>
-  </div>
-</div>
-
-<div class="row">
-
-  <div class="three columns left lit">
-    <p class="bottom">May 27, 2021</p>
-  </div>
-  <div class="nine columns left mb-3">
-    <a href="/2021/05/27/cpp-excpetion-captured-2/" >
-      
-        CPPExceptionTerminate Crash（后续）
-      
-    </a>
-  </div>
-</div>
-
-
-<h5> <a href="/archives">All Posts</a></h5>
 
           <div class="row mt-2">
   
