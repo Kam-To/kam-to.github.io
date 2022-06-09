@@ -11,12 +11,12 @@
   <meta charset="utf-8">
 
   
-  <title>寻找 directable method/property</title>
+  <title>寻找 directable method/property - Kam</title>
   <meta name="theme-color" content="#7956b7">
   
-  <link rel="canonical" href="http://example.com/2021/10/27/objc-direct-finder/">
+  <link rel="canonical" href="http://example.com/objc-direct-finder.html">
   
-  <meta name="description" content="先前提到有在做一个 clang plugin 用来寻找可 direct call 的 property 和 method，整理了下搁 Github 上了～ Implementation这个插件的实现思路其实非常简单，就是通过访问 AST 的结点的过程中，遇到的每个方法声明/实现都通过一定的规则判断是">
+  <meta name="description" content="">
   
   
   <meta name="author" content="Kam">
@@ -25,21 +25,21 @@
   
   <meta property="og:site_name" content="KAM" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="寻找 directable method/property" />
+  <meta property="og:title" content="寻找 directable method/property - Kam" />
   
-  <meta property="og:description" content="先前提到有在做一个 clang plugin 用来寻找可 direct call 的 property 和 method，整理了下搁 Github 上了～ Implementation这个插件的实现思路其实非常简单，就是通过访问 AST 的结点的过程中，遇到的每个方法声明/实现都通过一定的规则判断是">
+  <meta property="og:description" content="">
   
-  <meta property="og:url" content="http://example.com/2021/10/27/objc-direct-finder/" />
+  <meta property="og:url" content="http://example.com/objc-direct-finder.html" />
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="寻找 directable method/property">
+  <meta name="twitter:title" content="寻找 directable method/property - Kam">
   
-  <meta name="twitter:description" content="先前提到有在做一个 clang plugin 用来寻找可 direct call 的 property 和 method，整理了下搁 Github 上了～ Implementation这个插件的实现思路其实非常简单，就是通过访问 AST 的结点的过程中，遇到的每个方法声明/实现都通过一定的规则判断是">
+  <meta name="twitter:description" content="">
   
   
   <meta name="twitter:image" content="http://example.comundefined">
   
-  <meta name="twitter:url" content="http://example.com/2021/10/27/objc-direct-finder/" />
+  <meta name="twitter:url" content="http://example.com/objc-direct-finder.html" />
 
   <!-- Mobile Specific Metas
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -208,9 +208,6 @@
 <pre class="line-numbers language-none"><code class="language-none">-Xclang -load -Xclang &quot;&#x2F;Users&#x2F;kam&#x2F;Desktop&#x2F;llvm&#x2F;build&#x2F;Release&#x2F;lib&#x2F;ObjCDirectFinder.dylib&quot; -Xclang -add-plugin -Xclang directable-finder<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <h2 id="EOF"><a href="#EOF" class="headerlink" title="EOF"></a>EOF</h2>
-  <p> — Oct 27, 2021</p>
-  
-
 
           <div class="row mt-2">
   
